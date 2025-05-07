@@ -26,6 +26,8 @@ export default function DashboardLayout({
   const studentNavItems = [
     { name: "Overview", href: "/dashboard" },
     { name: "Projects", href: "/dashboard/projects" },
+    { name: "Jobs", href: "/dashboard/jobs" },
+    { name: "Applications", href: "/dashboard/applications" },
     { name: "Courses", href: "/dashboard/courses" },
     { name: "Skills", href: "/dashboard/skills" },
     { name: "Mentorship", href: "/dashboard/mentorship" },

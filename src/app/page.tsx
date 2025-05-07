@@ -189,19 +189,30 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-muted py-12">
-        <div className="container flex flex-col items-center justify-center gap-4 text-center">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Ready to get started?
+      <section className=" py-16">
+        <div className="container flex flex-col items-center justify-center gap-6 text-center">
+          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            Take Your Career to the Next Level
           </h2>
-          <p className="text-muted-foreground">
-            Join IndustryHunt Bangladesh today and transform your career journey.
+          <p className="max-w-2xl text-lg text-muted-foreground">
+            Join IndustryHunt Bangladesh today and connect with top employers, showcase your skills, 
+            and discover exciting opportunities tailored to your expertise.
           </p>
-          <Link href="/auth/register">
-            <Button size="lg" className="mt-4">
-              Sign up for free
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 mt-2">
+            <Link href="/auth/register">
+              <Button size="lg" className="font-medium">
+                Sign up for free
+              </Button>
+            </Link>
+            <Link href="/about">
+              <Button size="lg" variant="outline" className="font-medium">
+                Learn more
+              </Button>
+            </Link>
+          </div>
+          <div className="mt-4 text-sm text-muted-foreground">
+            Already have an account? <Link href="/auth/login" className="text-primary underline underline-offset-4">Sign in</Link>
+          </div>
         </div>
       </section>
 

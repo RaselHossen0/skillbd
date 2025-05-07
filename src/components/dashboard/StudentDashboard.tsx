@@ -27,6 +27,7 @@ interface DashboardStats {
   projects_count: number;
   courses_count: number;
   sessions_count: number;
+  applications_count: number;
 }
 
 interface Skill {
@@ -59,6 +60,17 @@ interface Activity {
   progress?: number;
 }
 
+interface JobApplication {
+  id: string;
+  status: string;
+  created_at: string;
+  job: {
+    id: string;
+    title: string;
+    company_name?: string;
+  };
+}
+
 interface StudentDashboardProps {
   user: User;
 }
@@ -68,12 +80,14 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     skills_count: 0,
     projects_count: 0,
     courses_count: 0,
-    sessions_count: 0
+    sessions_count: 0,
+    applications_count: 0
   });
   const [skills, setSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [mentors, setMentors] = useState<any[]>([]);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -81,6 +95,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [isDeletingSession, setIsDeletingSession] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -121,8 +136,31 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           if (!projectsResponse.ok) throw new Error('Failed to fetch projects');
           const projectsData = await projectsResponse.json();
           
+          // Fetch job applications
+          const applicationsResponse = await fetch(`/api/jobs/applications?studentId=${studentId}`);
+          if (!applicationsResponse.ok) throw new Error('Failed to fetch job applications');
+          const applicationsData = await applicationsResponse.json();
+          
           setSkills(skillsData.skills || []);
           setProjects(projectsData.projects || []);
+          setApplications(applicationsData.applications || []);
+          
+          // Update applications count in stats
+          setStats(prev => ({
+            ...prev,
+            applications_count: applicationsData.applications?.length || 0
+          }));
+          
+          // Fetch available projects
+          try {
+            const projectsResponse = await fetch(`/api/dashboard/students/available-projects?studentId=${studentId}`);
+            if (projectsResponse.ok) {
+              const projectsData = await projectsResponse.json();
+              setAvailableProjects(projectsData.projects || []);
+            }
+          } catch (error) {
+            console.error('Error fetching available projects:', error);
+          }
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -386,6 +424,15 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     );
   };
 
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -405,12 +452,15 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline">Download CV</Button>
+          <Button variant="outline" asChild>
+            <Link href="/jobs">Browse Jobs</Link>
+          </Button>
           <Button>Complete Profile</Button>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Skills Assessed</CardTitle>
@@ -506,6 +556,32 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <div className="text-2xl font-bold">{stats.sessions_count}</div>
             <p className="text-xs text-muted-foreground">
               Next session tomorrow
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Job Applications</CardTitle>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+              <line x1="12" y1="22.08" x2="12" y2="12" />
+            </svg>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.applications_count || applications.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {applications.filter(app => app.status === "PENDING").length} pending applications
             </p>
           </CardContent>
         </Card>
@@ -613,9 +689,117 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
               <div className="col-span-full text-center py-4">
                 <p className="text-muted-foreground">No projects available. Check the marketplace for opportunities!</p>
                 <Button variant="outline" className="mt-2" asChild>
-                  <Link href="/dashboard/marketplace">Browse Marketplace</Link>
+                  <Link href="/dashboard/jobs">Browse Marketplace</Link>
                 </Button>
               </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Job Applications */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Recent Job Applications</CardTitle>
+            <CardDescription>Track the status of your job applications</CardDescription>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/applications">View All Applications</Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {applications.length > 0 ? (
+              applications.slice(0, 3).map((application) => (
+                <div key={application.id} className="flex items-center justify-between border p-4 rounded-lg">
+                  <div>
+                    <h4 className="font-medium">{application.job.title}</h4>
+                    <p className="text-sm text-muted-foreground">{application.job.company_name || "Company"}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline">Applied on {formatDate(application.created_at)}</Badge>
+                      <Badge 
+                        variant={
+                          application.status === "PENDING" 
+                            ? "secondary" 
+                            : application.status === "REJECTED" 
+                              ? "destructive"
+                              : "default"
+                        }
+                      >
+                        {application.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/dashboard/applications">View Details</Link>
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">No job applications yet. Start applying for jobs!</p>
+                <Button variant="outline" className="mt-4 w-full" asChild>
+                  <Link href="/dashboard/jobs">Find Jobs</Link>
+                </Button>
+              </div>
+            )}
+            
+            {applications.length > 0 && (
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/jobs">Find More Jobs</Link>
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Available Projects */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Available Projects</CardTitle>
+            <CardDescription>Real-world projects from employers</CardDescription>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/projects">Browse All Projects</Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {availableProjects.length > 0 ? (
+              availableProjects.slice(0, 3).map((project) => (
+                <div key={project.id} className="flex items-center justify-between border p-4 rounded-lg">
+                  <div>
+                    <h4 className="font-medium">{project.title}</h4>
+                    <p className="text-sm text-muted-foreground">{project.company_name || "Company"}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {project.is_paid && (
+                        <Badge variant="secondary">Paid: ${project.budget}</Badge>
+                      )}
+                      {project.deadline && (
+                        <Badge variant="outline">Deadline: {formatDate(project.deadline)}</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/dashboard/projects?id=${project.id}`}>View Details</Link>
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">No available projects at the moment.</p>
+                <Button variant="outline" className="mt-4 w-full" asChild>
+                  <Link href="/dashboard/projects">Find Projects</Link>
+                </Button>
+              </div>
+            )}
+            
+            {availableProjects.length > 0 && (
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/dashboard/projects">Find More Projects</Link>
+              </Button>
             )}
           </div>
         </CardContent>

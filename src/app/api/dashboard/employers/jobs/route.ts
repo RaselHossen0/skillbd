@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
+// GET jobs for a specific employer
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    // Get query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const employerId = searchParams.get('employerId');
     const status = searchParams.get('status');
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit') as string) : undefined;
     
-    // Create server-side client to bypass RLS
+    if (!employerId) {
+      return NextResponse.json(
+        { error: 'Missing required parameter: employerId' },
+        { status: 400 }
+      );
+    }
+    
+    // Create server-side client with service role to bypass RLS
     const supabaseServerClient = createServerSupabaseClient();
     
     // Build the query
@@ -30,18 +40,12 @@ export async function GET(request: NextRequest) {
         job_applications (
           id
         )
-      `);
+      `)
+      .eq('employer_id', employerId);
     
-    // Only show active jobs by default
-    if (!status) {
-      query = query.eq('status', 'ACTIVE');
-    } else if (status !== 'all') {
+    // Filter by status if provided
+    if (status) {
       query = query.eq('status', status);
-    }
-    
-    // Apply limit if provided
-    if (limit) {
-      query = query.limit(limit);
     }
     
     // Order by creation date, newest first
@@ -75,55 +79,57 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ jobs });
   } catch (error) {
-    console.error('Error fetching jobs:', error);
+    console.error('Error in jobs API:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch jobs' },
+      { error: 'Failed to process request' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+// POST endpoint to create a new job
+export async function POST(request: NextRequest) {
   try {
+    // Get request body
     const body = await request.json();
-    const {
-      title,
-      description,
-      requirements,
-      location,
-      salary_range,
+    const { 
+      employer_id, 
+      title, 
+      description, 
+      requirements, 
+      location, 
+      salary_range, 
       deadline,
-      employer_id,
-      status = 'ACTIVE',
+      status = 'ACTIVE'
     } = body;
-
+    
     // Validate required fields
-    if (!title || !description || !employer_id) {
+    if (!employer_id || !title || !description) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: employer_id, title, and description are required' },
         { status: 400 }
       );
     }
     
-    // Create server-side client to bypass RLS
+    // Create server-side client with service role to bypass RLS
     const supabaseServerClient = createServerSupabaseClient();
-
-    // Create the job
+    
+    // Create the job using service role client
     const { data, error } = await supabaseServerClient
       .from('jobs')
       .insert({
+        employer_id,
         title,
         description,
         requirements,
         location,
         salary_range,
         deadline: deadline ? new Date(deadline).toISOString() : null,
-        employer_id,
-        status,
+        status
       })
       .select('*')
       .single();
-
+    
     if (error) {
       console.error('Error creating job:', error);
       return NextResponse.json(
@@ -131,12 +137,16 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    return NextResponse.json(data);
+    
+    return NextResponse.json({ 
+      success: true,
+      job: data,
+      message: 'Job created successfully' 
+    });
   } catch (error) {
-    console.error('Error creating job:', error);
+    console.error('Error in jobs API:', error);
     return NextResponse.json(
-      { error: 'Failed to create job' },
+      { error: 'Failed to process request' },
       { status: 500 }
     );
   }
