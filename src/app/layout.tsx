@@ -6,7 +6,7 @@ import { Providers } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SkillBridge Bangladesh",
+  title: "IndustryHunt Bangladesh",
   description: "Connect students with real-world projects and mentors",
 };
 

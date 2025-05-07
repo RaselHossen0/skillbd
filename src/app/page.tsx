@@ -9,8 +9,8 @@ export default function Home() {
       <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="SkillBridge Logo" width={40} height={40} className="h-8 w-8" />
-            <span className="text-xl font-bold">SkillBridge BD</span>
+            <Image src="/logo.svg" alt="IndustryHunt Logo" width={40} height={40} className="h-8 w-8" />
+            <span className="text-xl font-bold">IndustryHuntBD</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/auth/login">
@@ -28,7 +28,7 @@ export default function Home() {
         <div className="flex max-w-[980px] flex-col items-center gap-4 text-center">
           <h1 className="text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl">
             Connect, Learn, and Grow with <br />
-            <span className="text-primary">SkillBridge Bangladesh</span>
+            <span className="text-primary">IndustryHunt Bangladesh</span>
           </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground sm:text-xl">
             Bridging the gap between education and employment by connecting students 
@@ -195,7 +195,7 @@ export default function Home() {
             Ready to get started?
           </h2>
           <p className="text-muted-foreground">
-            Join SkillBridge Bangladesh today and transform your career journey.
+            Join IndustryHunt Bangladesh today and transform your career journey.
           </p>
           <Link href="/auth/register">
             <Button size="lg" className="mt-4">

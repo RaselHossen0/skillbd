@@ -30,7 +30,6 @@ export default function DashboardLayout({
     { name: "Skills", href: "/dashboard/skills" },
     { name: "Mentorship", href: "/dashboard/mentorship" },
     { name: "Portfolio", href: "/dashboard/portfolio" },
-    { name: "Messages", href: "/dashboard/messages" },
   ];
 
   const mentorNavItems = [
@@ -144,10 +143,10 @@ export default function DashboardLayout({
                   alt="SkillBridge BD Logo"
                   width={24}
                   height={24}
-                  className="h-8 w-8"
+                  className="h-8 w-8 ml-4"
                 />
                 <span className="hidden font-bold text-xl md:inline-block">
-                  SkillBridge BD
+                   IndustryHuntBD
                 </span>
               </Link>
               <div className="h-6 w-px bg-muted mx-1 hidden md:block"></div>
