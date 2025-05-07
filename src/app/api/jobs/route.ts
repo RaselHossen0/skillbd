@@ -1,87 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit') as string) : undefined;
-    
-    // Create server-side client to bypass RLS
-    const supabaseServerClient = createServerSupabaseClient();
-    
-    // Build the query
-    let query = supabaseServerClient
-      .from('jobs')
-      .select(`
-        id,
-        title,
-        description,
-        requirements,
-        location,
-        salary_range,
-        deadline,
-        status,
-        created_at,
-        employer_id,
-        employers (
-          company_name
-        ),
-        job_applications (
-          id
-        )
-      `);
-    
-    // Only show active jobs by default
-    if (!status) {
-      query = query.eq('status', 'ACTIVE');
-    } else if (status !== 'all') {
-      query = query.eq('status', status);
-    }
-    
-    // Apply limit if provided
-    if (limit) {
-      query = query.limit(limit);
-    }
-    
-    // Order by creation date, newest first
-    query = query.order('created_at', { ascending: false });
-    
-    // Execute the query
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching jobs:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch jobs' },
-        { status: 500 }
-      );
-    }
-    
-    // Transform the response to match the expected format
-    const jobs = data.map((job: any) => ({
-      id: job.id,
-      title: job.title,
-      description: job.description,
-      requirements: job.requirements,
-      location: job.location,
-      salary_range: job.salary_range,
-      deadline: job.deadline,
-      status: job.status,
-      created_at: job.created_at,
-      company_name: job.employers?.company_name,
-      applications_count: job.job_applications ? job.job_applications.length : 0
-    }));
-    
-    return NextResponse.json({ jobs });
-  } catch (error) {
-    console.error('Error fetching jobs:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch jobs' },
-      { status: 500 }
-    );
-  }
-}
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -94,7 +12,7 @@ export async function POST(request: Request) {
       salary_range,
       deadline,
       employer_id,
-      status = 'ACTIVE',
+      status,
     } = body;
 
     // Validate required fields
@@ -104,39 +22,78 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
-    // Create server-side client to bypass RLS
-    const supabaseServerClient = createServerSupabaseClient();
 
     // Create the job
-    const { data, error } = await supabaseServerClient
-      .from('jobs')
-      .insert({
+    const job = await prisma.job.create({
+      data: {
         title,
         description,
         requirements,
         location,
         salary_range,
-        deadline: deadline ? new Date(deadline).toISOString() : null,
+        deadline: deadline ? new Date(deadline) : undefined,
         employer_id,
-        status,
-      })
-      .select('*')
-      .single();
+        status: status || 'ACTIVE',
+      },
+    });
 
-    if (error) {
-      console.error('Error creating job:', error);
-      return NextResponse.json(
-        { error: 'Failed to create job' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(data);
+    return NextResponse.json(job);
   } catch (error) {
     console.error('Error creating job:', error);
     return NextResponse.json(
       { error: 'Failed to create job' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const employerId = searchParams.get('employerId');
+    const status = searchParams.get('status');
+
+    // Build the where clause
+    const where: any = {};
+    if (employerId) {
+      where.employer_id = employerId;
+    }
+    if (status) {
+      where.status = status;
+    }
+
+    // Fetch jobs
+    const jobs = await prisma.job.findMany({
+      where,
+      include: {
+        employer: {
+          select: {
+            company_name: true,
+          },
+        },
+        _count: {
+          select: {
+            applications: true,
+          },
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    // Transform the response to include applications count
+    const transformedJobs = jobs.map(job => ({
+      ...job,
+      applications_count: job._count.applications,
+      company_name: job.employer.company_name,
+    }));
+
+    return NextResponse.json(transformedJobs);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch jobs' },
       { status: 500 }
     );
   }

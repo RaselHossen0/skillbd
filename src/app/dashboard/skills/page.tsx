@@ -57,16 +57,17 @@ export default function SkillsPage() {
         // Get current user info
         const { data: userSession } = await supabase.auth.getSession();
         const userId = userSession?.session?.user?.id;
-        
+
         if (!userId) {
-          console.error('User not authenticated');
+          console.error("User not authenticated");
           return;
         }
-        
+
         // Fetch user's existing skills
         const { data: skillsData, error: skillsError } = await supabase
-          .from('user_skills')
-          .select(`
+          .from("user_skills")
+          .select(
+            `
             id,
             level,
             verified,
@@ -75,38 +76,45 @@ export default function SkillsPage() {
               name,
               category
             )
-          `)
-          .eq('user_id', userId);
-          
+          `
+          )
+          .eq("user_id", userId);
+
         if (skillsError) {
-          console.error('Error fetching skills:', skillsError);
+          console.error("Error fetching skills:", skillsError);
         } else {
           setMySkills(skillsData || []);
         }
-        
+
         // Fetch available skills for assessment
         const { data: availableData, error: availableError } = await supabase
-          .from('skills')
-          .select('*')
-          .not('id', 'in', (skillsData || []).map((s: any) => s.skills.id).join(','));
-          
+          .from("skills")
+          .select("*")
+          .not(
+            "id",
+            "in",
+            (skillsData || []).map((s: any) => s.skills.id).join(",")
+          );
+
         if (availableError) {
-          console.error('Error fetching available skills:', availableError);
+          console.error("Error fetching available skills:", availableError);
         } else {
           // Format the available skills data
-          const formattedAvailable = (availableData || []).map((skill: any) => ({
-            name: skill.name,
-            category: skill.category,
-            questions: 10, // Default value
-            level: 'medium' // Default value
-          }));
+          const formattedAvailable = (availableData || []).map(
+            (skill: any) => ({
+              name: skill.name,
+              category: skill.category,
+              questions: 10, // Default value
+              level: "medium", // Default value
+            })
+          );
           setAvailableSkills(formattedAvailable);
         }
       } catch (error) {
-        console.error('Error in fetchSkills:', error);
+        console.error("Error in fetchSkills:", error);
       }
     }
-    
+
     fetchSkills();
   }, []);
 
@@ -139,11 +147,9 @@ export default function SkillsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // Find the skill in availableSkills to get the question count
+      // Try to find the skill in availableSkills for question count, else use default
       const skillInfo = availableSkills.find((s) => s.name === skill);
-      if (!skillInfo) {
-        throw new Error("Skill not found");
-      }
+      const questionCount = skillInfo ? skillInfo.questions : 10;
 
       const response = await fetch("/api/generate-questions", {
         method: "POST",
@@ -152,7 +158,7 @@ export default function SkillsPage() {
         },
         body: JSON.stringify({
           skill,
-          questionCount: skillInfo.questions,
+          questionCount,
         }),
       });
 
@@ -243,11 +249,15 @@ export default function SkillsPage() {
 
   // Function to get level color classes
   const getLevelColorClass = (level: string) => {
-    switch(level) {
-      case "easy": return "text-green-600";
-      case "medium": return "text-yellow-600";
-      case "difficult": return "text-red-600";
-      default: return "";
+    switch (level) {
+      case "easy":
+        return "text-green-600";
+      case "medium":
+        return "text-yellow-600";
+      case "difficult":
+        return "text-red-600";
+      default:
+        return "";
     }
   };
 
@@ -296,7 +306,9 @@ export default function SkillsPage() {
                   <div key={skill.name} className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="font-medium text-lg">{skill.name}</span>
+                        <span className="font-medium text-lg">
+                          {skill.name}
+                        </span>
                         <Badge variant="outline" className="ml-3 px-3 py-1">
                           {skill.category}
                         </Badge>
@@ -311,8 +323,8 @@ export default function SkillsPage() {
                         Level {skill.level}/5
                       </span>
                     </div>
-                    <Progress 
-                      value={skill.level * 20} 
+                    <Progress
+                      value={skill.level * 20}
                       className={`h-2.5 ${getSkillLevelColor(skill.level)}`}
                     />
                   </div>
@@ -329,7 +341,9 @@ export default function SkillsPage() {
           {/* Skill Recommendations */}
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-2xl mb-2">Recommended Skills</CardTitle>
+              <CardTitle className="text-2xl mb-2">
+                Recommended Skills
+              </CardTitle>
               <CardDescription className="text-base">
                 Based on your profile and industry demand
               </CardDescription>
@@ -337,7 +351,10 @@ export default function SkillsPage() {
             <CardContent className="pb-6">
               <div className="grid gap-6 md:grid-cols-3">
                 {["TypeScript", "Docker", "AWS"].map((skill) => (
-                  <Card key={skill} className="shadow-sm hover:shadow-md transition-shadow duration-300">
+                  <Card
+                    key={skill}
+                    className="shadow-sm hover:shadow-md transition-shadow duration-300"
+                  >
                     <CardHeader className="p-5">
                       <CardTitle className="text-lg">{skill}</CardTitle>
                     </CardHeader>
@@ -366,7 +383,9 @@ export default function SkillsPage() {
           {/* Available Assessments */}
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-2xl mb-2">Available Skill Assessments</CardTitle>
+              <CardTitle className="text-2xl mb-2">
+                Available Skill Assessments
+              </CardTitle>
               <CardDescription className="text-base">
                 Take assessments to verify your skill levels
               </CardDescription>
@@ -374,19 +393,29 @@ export default function SkillsPage() {
             <CardContent className="pb-6">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {availableSkills.map((skill) => (
-                  <Card key={skill.name} className="shadow-sm hover:shadow-md transition-shadow duration-300">
+                  <Card
+                    key={skill.name}
+                    className="shadow-sm hover:shadow-md transition-shadow duration-300"
+                  >
                     <CardHeader className="p-5">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg mb-1">{skill.name}</CardTitle>
+                          <CardTitle className="text-lg mb-1">
+                            {skill.name}
+                          </CardTitle>
                           <CardDescription>{skill.category}</CardDescription>
                         </div>
-                        <Badge className={`${
-                          skill.level === "easy" ? "bg-green-500 hover:bg-green-600" :
-                          skill.level === "medium" ? "bg-yellow-500 hover:bg-yellow-600" :
-                          "bg-red-500 hover:bg-red-600"
-                        } px-3 py-1`}>
-                          {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
+                        <Badge
+                          className={`${
+                            skill.level === "easy"
+                              ? "bg-green-500 hover:bg-green-600"
+                              : skill.level === "medium"
+                              ? "bg-yellow-500 hover:bg-yellow-600"
+                              : "bg-red-500 hover:bg-red-600"
+                          } px-3 py-1`}
+                        >
+                          {skill.level.charAt(0).toUpperCase() +
+                            skill.level.slice(1)}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -395,14 +424,18 @@ export default function SkillsPage() {
                         <div className="flex items-center">
                           <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                           <div>
-                            <p className="text-muted-foreground mb-1">Questions</p>
+                            <p className="text-muted-foreground mb-1">
+                              Questions
+                            </p>
                             <p className="font-medium">{skill.questions}</p>
                           </div>
                         </div>
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                           <div>
-                            <p className="text-muted-foreground mb-1">Duration</p>
+                            <p className="text-muted-foreground mb-1">
+                              Duration
+                            </p>
                             <p className="font-medium">
                               {calculateDuration(skill.questions, skill.level)}
                             </p>
@@ -482,7 +515,9 @@ export default function SkillsPage() {
                         <div
                           key={index}
                           className={`flex items-center space-x-3 p-3 rounded-md border ${
-                            isAnswerCorrect !== null && option === generatedQuestions[currentQuestion].correctAnswer
+                            isAnswerCorrect !== null &&
+                            option ===
+                              generatedQuestions[currentQuestion].correctAnswer
                               ? "border-green-500 bg-green-50"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
@@ -494,7 +529,7 @@ export default function SkillsPage() {
                             disabled={isAnswerCorrect !== null}
                             className="h-5 w-5"
                           />
-                          <Label 
+                          <Label
                             htmlFor={`option-${index}`}
                             className="flex-1 cursor-pointer text-base"
                           >
@@ -520,7 +555,10 @@ export default function SkillsPage() {
                       ) : (
                         <>
                           <XCircle className="h-5 w-5 mr-2" />
-                          <span>Incorrect. The correct answer is: {generatedQuestions[currentQuestion].correctAnswer}</span>
+                          <span>
+                            Incorrect. The correct answer is:{" "}
+                            {generatedQuestions[currentQuestion].correctAnswer}
+                          </span>
                         </>
                       )}
                     </div>
@@ -528,7 +566,11 @@ export default function SkillsPage() {
                 </div>
               )}
               <DialogFooter className="pt-4">
-                <Button variant="outline" onClick={resetQuiz} className="px-6 py-2">
+                <Button
+                  variant="outline"
+                  onClick={resetQuiz}
+                  className="px-6 py-2"
+                >
                   Cancel
                 </Button>
               </DialogFooter>
@@ -536,11 +578,15 @@ export default function SkillsPage() {
           ) : (
             <>
               <div className="py-8 flex flex-col items-center justify-center">
-                <div className={`text-8xl font-bold mb-6 ${
-                  calculateResult() >= 4 ? "text-green-500" :
-                  calculateResult() >= 3 ? "text-blue-500" :
-                  "text-yellow-500"
-                }`}>
+                <div
+                  className={`text-8xl font-bold mb-6 ${
+                    calculateResult() >= 4
+                      ? "text-green-500"
+                      : calculateResult() >= 3
+                      ? "text-blue-500"
+                      : "text-yellow-500"
+                  }`}
+                >
                   {calculateResult()}/5
                 </div>
                 <p className="text-center text-lg mb-6 max-w-md mx-auto">
@@ -569,16 +615,20 @@ export default function SkillsPage() {
                       ).length /
                         generatedQuestions.length) *
                         100
-                    )}% accuracy
+                    )}
+                    % accuracy
                   </span>
                 </div>
                 <Progress
                   value={calculateResult() * 20}
                   className={`h-3 w-full mb-6 ${
-                    calculateResult() >= 4 ? "bg-green-500" :
-                    calculateResult() >= 3 ? "bg-blue-500" :
-                    calculateResult() >= 2 ? "bg-yellow-500" :
-                    "bg-red-500"
+                    calculateResult() >= 4
+                      ? "bg-green-500"
+                      : calculateResult() >= 3
+                      ? "bg-blue-500"
+                      : calculateResult() >= 2
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                   }`}
                 />
               </div>

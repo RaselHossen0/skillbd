@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/components/providers/AuthProvider";
 
 interface AssessmentQuestion {
   id: string;
@@ -22,78 +21,29 @@ interface AssessmentQuestion {
 }
 
 export default function AssessmentsPage() {
-  const { user } = useAuth();
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctOption, setCorrectOption] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Get employerId from user object
-  const employerId = user?.employers?.[0]?.id;
-
-  // Fetch questions on load
-  useEffect(() => {
-    if (!employerId) return;
-    setLoading(true);
-    fetch(`/api/assessments?employerId=${employerId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setQuestions(data.questions || []);
-        setError(null);
-      })
-      .catch((err) => setError("Failed to load questions"))
-      .finally(() => setLoading(false));
-  }, [employerId]);
-
-  // Add question via API
-  const handleAddQuestion = async () => {
-    if (
-      !question.trim() ||
-      options.some((opt) => !opt.trim()) ||
-      employerId === undefined
-    )
-      return;
-    try {
-      const res = await fetch("/api/assessments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employer_id: employerId,
-          question,
-          options,
-          correct_option: correctOption,
-        }),
-      });
-      const data = await res.json();
-      if (data.question) {
-        setQuestions([data.question, ...questions]);
-        setQuestion("");
-        setOptions(["", "", "", ""]);
-        setCorrectOption(0);
-        setError(null);
-      } else {
-        setError(data.error || "Failed to add question");
-      }
-    } catch (err) {
-      setError("Failed to add question");
-    }
+  const handleAddQuestion = () => {
+    if (!question.trim() || options.some((opt) => !opt.trim())) return;
+    setQuestions([
+      ...questions,
+      {
+        id: Math.random().toString(36).slice(2),
+        question,
+        options: [...options],
+        correct_option: correctOption,
+      },
+    ]);
+    setQuestion("");
+    setOptions(["", "", "", ""]);
+    setCorrectOption(0);
   };
 
-  // Delete question via API
-  const handleDelete = async (id: string) => {
-    if (!employerId) return;
-    try {
-      await fetch("/api/assessments", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, employer_id: employerId }),
-      });
-      setQuestions(questions.filter((q) => q.id !== id));
-    } catch (err) {
-      setError("Failed to delete question");
-    }
+  const handleDelete = (id: string) => {
+    setQuestions(questions.filter((q) => q.id !== id));
   };
 
   return (
@@ -115,7 +65,6 @@ export default function AssessmentsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {error && <p className="text-red-600 text-sm">{error}</p>}
             <div>
               <Label htmlFor="question">Question</Label>
               <Input
@@ -157,11 +106,7 @@ export default function AssessmentsPage() {
         </CardContent>
       </Card>
       <div className="grid gap-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
-        ) : questions.length > 0 ? (
+        {questions.length > 0 ? (
           questions.map((q, idx) => (
             <Card key={q.id} className="overflow-hidden">
               <CardHeader>
