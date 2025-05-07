@@ -45,16 +45,127 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Use the enhanced database function for all roles
-    const { data, error } = await supabase
-      .rpc('get_dashboard_sessions', {
-        p_user_id: userId,
-        p_role: userRole
+    // Try to use the enhanced database function first
+    try {
+      const { data, error } = await supabase
+        .rpc('get_dashboard_sessions', {
+          p_user_id: userId,
+          p_role: userRole
+        });
+      
+      if (!error) {
+        return NextResponse.json({ sessions: data || [] });
+      }
+      
+      // If there's an error with the RPC function, continue to the fallback
+      console.log('Function not available, falling back to direct queries:', error);
+    } catch (rpcError) {
+      console.log('Error calling RPC function:', rpcError);
+    }
+    
+    // Fallback to the original implementation
+    let sessions: any[] = [];
+    
+    if (userRole === 'STUDENT') {
+      // Fetch student sessions
+      const { data, error } = await supabase
+        .from('mentorship_sessions')
+        .select(`
+          id, 
+          title, 
+          description,
+          date, 
+          time, 
+          status, 
+          zoom_link,
+          mentors:mentor_id(id, users(name, avatar_url))
+        `)
+        .eq('student_id', userId)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Transform the response to match our expected format
+      sessions = (data || []).map(session => {
+        const mentors = session.mentors as any;
+        return {
+          ...session,
+          mentor: mentors ? {
+            id: mentors.id,
+            name: mentors.users?.name || "Mentor",
+            avatar_url: mentors.users?.avatar_url
+          } : undefined
+        };
       });
+    } 
+    else if (userRole === 'MENTOR') {
+      // Fetch mentor sessions
+      const { data, error } = await supabase
+        .from('mentorship_sessions')
+        .select(`
+          id, 
+          title, 
+          description,
+          date, 
+          time, 
+          status, 
+          zoom_link,
+          students:student_id(id, users(name, avatar_url))
+        `)
+        .eq('mentor_id', userId)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Transform the response to match our expected format
+      sessions = (data || []).map(session => {
+        const students = session.students as any;
+        return {
+          ...session,
+          student: students ? {
+            id: students.id,
+            name: students.users?.name || "Student",
+            avatar_url: students.users?.avatar_url
+          } : undefined
+        };
+      });
+    }
+    else if (userRole === 'EMPLOYER') {
+      // Fetch employer sessions - could be interviews or project discussions
+      const { data, error } = await supabase
+        .from('employer_sessions')
+        .select(`
+          id, 
+          title, 
+          description,
+          date, 
+          time, 
+          status, 
+          meeting_link,
+          applicants:applicant_id(id, users(name, avatar_url)),
+          job:job_id(id, title)
+        `)
+        .eq('employer_id', userId)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Transform the response to match our expected format
+      sessions = (data || []).map(session => {
+        const applicants = session.applicants as any;
+        return {
+          ...session,
+          applicant: applicants ? {
+            id: applicants.id,
+            name: applicants.users?.name || "Applicant",
+            avatar_url: applicants.users?.avatar_url
+          } : undefined,
+          zoom_link: session.meeting_link
+        };
+      });
+    }
     
-    if (error) throw error;
-    
-    return NextResponse.json({ sessions: data || [] });
+    return NextResponse.json({ sessions });
   } catch (error) {
     console.error('Error fetching sessions:', error);
     return NextResponse.json(
@@ -86,22 +197,68 @@ export async function POST(request: Request) {
         );
       }
       
-      // Use the enhanced database function for creating sessions
+      // Try the enhanced database function first
+      try {
+        const { data, error } = await supabase
+          .rpc('create_mentorship_session', {
+            p_role: userRole,
+            p_creator_id: sessionData.creator_id,
+            p_mentor_id: sessionData.mentor_id,
+            p_student_id: sessionData.student_id,
+            p_title: sessionData.title,
+            p_description: sessionData.description || null,
+            p_date: sessionData.date,
+            p_time: sessionData.time,
+            p_zoom_link: sessionData.zoom_link || null
+          });
+        
+        if (!error) {
+          return NextResponse.json({ session: data });
+        }
+        
+        // If RPC fails, log error and continue to fallback
+        console.log('Function create_mentorship_session not available, falling back:', error);
+      } catch (rpcError) {
+        console.log('Error calling RPC function:', rpcError);
+      }
+      
+      // Fallback to direct table insert
       const { data, error } = await supabase
-        .rpc('create_mentorship_session', {
-          p_role: userRole,
-          p_creator_id: sessionData.creator_id,
-          p_mentor_id: sessionData.mentor_id,
-          p_student_id: sessionData.student_id,
-          p_title: sessionData.title,
-          p_description: sessionData.description || null,
-          p_date: sessionData.date,
-          p_time: sessionData.time,
-          p_zoom_link: sessionData.zoom_link || null
-        });
+        .from('mentorship_sessions')
+        .insert([{
+          title: sessionData.title,
+          date: sessionData.date,
+          time: sessionData.time,
+          status: sessionData.status || 'PENDING',
+          zoom_link: sessionData.zoom_link || '',
+          mentor_id: sessionData.mentor_id,
+          student_id: sessionData.student_id,
+          description: sessionData.description || ''
+        }])
+        .select();
       
       if (error) throw error;
-      return NextResponse.json({ session: data });
+      
+      // Get the mentor details to return a properly formatted response
+      const mentorResponse = await supabase
+        .from('mentors')
+        .select('id, users(name, avatar_url)')
+        .eq('id', sessionData.mentor_id)
+        .single();
+        
+      const session = data[0];
+      const mentorData = mentorResponse.data as any;
+      
+      const formattedSession = {
+        ...session,
+        mentor: mentorData ? {
+          id: mentorData.id,
+          name: mentorData.users?.name || "Mentor",
+          avatar_url: mentorData.users?.avatar_url
+        } : undefined
+      };
+      
+      return NextResponse.json({ session: formattedSession });
     } 
     else if (userRole === 'EMPLOYER') {
       // For employer sessions, continue with the existing implementation
@@ -161,21 +318,100 @@ export async function PUT(request: Request) {
     
     // Update session based on user role
     if (userRole === 'STUDENT' || userRole === 'MENTOR') {
-      // Use the enhanced database function for updating sessions
+      // Try the enhanced database function first
+      try {
+        const { data, error } = await supabase
+          .rpc('update_mentorship_session', {
+            p_session_id: sessionId,
+            p_role: userRole,
+            p_title: sessionData.title || null,
+            p_description: sessionData.description || null,
+            p_date: sessionData.date || null,
+            p_time: sessionData.time || null, 
+            p_status: sessionData.status || null,
+            p_zoom_link: sessionData.zoom_link || null
+          });
+        
+        if (!error) {
+          return NextResponse.json({ session: data });
+        }
+        
+        // If RPC fails, log error and continue to fallback
+        console.log('Function update_mentorship_session not available, falling back:', error);
+      } catch (rpcError) {
+        console.log('Error calling RPC function:', rpcError);
+      }
+      
+      // Fallback to direct table update
+      // Build update object with only the fields that are provided
+      const updateFields: any = {};
+      if (sessionData.title) updateFields.title = sessionData.title;
+      if (sessionData.description !== undefined) updateFields.description = sessionData.description;
+      if (sessionData.date) updateFields.date = sessionData.date;
+      if (sessionData.time) updateFields.time = sessionData.time;
+      if (sessionData.status) updateFields.status = sessionData.status;
+      if (sessionData.zoom_link) updateFields.zoom_link = sessionData.zoom_link;
+      
       const { data, error } = await supabase
-        .rpc('update_mentorship_session', {
-          p_session_id: sessionId,
-          p_role: userRole,
-          p_title: sessionData.title || null,
-          p_description: sessionData.description || null,
-          p_date: sessionData.date || null,
-          p_time: sessionData.time || null, 
-          p_status: sessionData.status || null,
-          p_zoom_link: sessionData.zoom_link || null
-        });
+        .from('mentorship_sessions')
+        .update(updateFields)
+        .eq('id', sessionId)
+        .select(`
+          id, 
+          title, 
+          description,
+          date, 
+          time, 
+          status, 
+          zoom_link,
+          mentor_id,
+          student_id
+        `);
       
       if (error) throw error;
-      return NextResponse.json({ session: data });
+      
+      // Get related data based on user role
+      let formattedSession: any = data[0];
+      
+      if (userRole === 'STUDENT') {
+        // Get mentor details
+        const mentorResponse = await supabase
+          .from('mentors')
+          .select('id, users(name, avatar_url)')
+          .eq('id', data[0].mentor_id)
+          .single();
+          
+        const mentorData = mentorResponse.data as any;
+        
+        formattedSession = {
+          ...formattedSession,
+          mentor: mentorData ? {
+            id: mentorData.id,
+            name: mentorData.users?.name || "Mentor",
+            avatar_url: mentorData.users?.avatar_url
+          } : undefined
+        };
+      } else {
+        // Get student details
+        const studentResponse = await supabase
+          .from('students')
+          .select('id, users(name, avatar_url)')
+          .eq('id', data[0].student_id)
+          .single();
+          
+        const studentData = studentResponse.data as any;
+        
+        formattedSession = {
+          ...formattedSession,
+          student: studentData ? {
+            id: studentData.id,
+            name: studentData.users?.name || "Student",
+            avatar_url: studentData.users?.avatar_url
+          } : undefined
+        };
+      }
+      
+      return NextResponse.json({ session: formattedSession });
     } 
     else if (userRole === 'EMPLOYER') {
       // For employer sessions, continue with the existing implementation
