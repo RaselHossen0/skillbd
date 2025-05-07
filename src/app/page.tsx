@@ -8,8 +8,8 @@ export default function Home() {
       {/* Navbar */}
       <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="IndustryHunt Logo" width={40} height={40} className="h-8 w-8" />
+          <div className="flex items-center gap-2 ">
+            <Image src="/logo.svg" alt="IndustryHunt Logo" width={40} height={40} className="h-8 w-8 ml-4" />
             <span className="text-xl font-bold">IndustryHuntBD</span>
           </div>
           <div className="flex items-center gap-4">
