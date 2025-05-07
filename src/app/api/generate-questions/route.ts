@@ -9,9 +9,30 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+function cleanAndParseJSON(jsonString: string) {
+  try {
+    // First try parsing as is
+    return JSON.parse(jsonString);
+  } catch (e) {
+    // If that fails, try to clean up the string
+    try {
+      // Remove any non-JSON text before the first [ and after the last ]
+      const cleaned = jsonString.replace(/^[^[]*/, '').replace(/[^\]]*$/, '');
+      return JSON.parse(cleaned);
+    } catch (e2) {
+      // If that still fails, try to extract just the array content
+      const match = jsonString.match(/\[[\s\S]*\]/);
+      if (match) {
+        return JSON.parse(match[0]);
+      }
+      throw new Error('Could not parse JSON from response');
+    }
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    const { skill } = await request.json();
+    const { skill, questionCount } = await request.json();
 
     if (!skill) {
       return NextResponse.json(
@@ -20,7 +41,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const prompt = `Generate 3 multiple choice questions about ${skill}. Format the response as a JSON array with objects containing 'question', 'options' (array of 4 strings), and 'correctAnswer' (string). Make the questions challenging and practical.`;
+    if (!questionCount || typeof questionCount !== 'number' || questionCount < 1) {
+      return NextResponse.json(
+        { error: 'Valid question count is required' },
+        { status: 400 }
+      );
+    }
+
+    const prompt = `Generate ${questionCount} multiple choice questions about ${skill}. Format the response as a JSON array with objects containing 'question', 'options' (array of 4 strings), and 'correctAnswer' (string). Make the questions challenging and practical. Each question should test different aspects of ${skill}. Return ONLY the JSON array, no other text.`;
     
     console.log('Sending request to Replicate with prompt:', prompt);
     
@@ -29,7 +57,7 @@ export async function POST(request: Request) {
       {
         input: {
           prompt: prompt,
-          max_tokens: 1000,
+          max_tokens: 2000,
         }
       }
     );
@@ -40,12 +68,20 @@ export async function POST(request: Request) {
       throw new Error('No response from Replicate');
     }
 
-    // Join the chunks and parse the JSON
-    const jsonString = Array.isArray(output) ? output.join('') : output;
+    // Handle different response formats
+    let jsonString: string;
+    if (Array.isArray(output)) {
+      // Join array chunks
+      jsonString = output.join('');
+    } else if (typeof output === 'string') {
+      jsonString = output;
+    } else {
+      throw new Error('Unexpected response format from Replicate');
+    }
+
     let questions;
-    
     try {
-      questions = JSON.parse(jsonString);
+      questions = cleanAndParseJSON(jsonString);
     } catch (parseError) {
       console.error('Failed to parse JSON:', jsonString);
       throw new Error('Invalid JSON response from Replicate');
@@ -60,12 +96,20 @@ export async function POST(request: Request) {
       if (!q.question || !Array.isArray(q.options) || !q.correctAnswer) {
         throw new Error(`Invalid question format at index ${index}`);
       }
+      if (q.options.length !== 4) {
+        throw new Error(`Question at index ${index} must have exactly 4 options`);
+      }
       return {
         question: q.question,
         options: q.options,
         correctAnswer: q.correctAnswer
       };
     });
+
+    // Ensure we have the requested number of questions
+    if (validatedQuestions.length !== questionCount) {
+      console.warn(`Requested ${questionCount} questions but received ${validatedQuestions.length}`);
+    }
 
     return NextResponse.json({ questions: validatedQuestions });
   } catch (error) {

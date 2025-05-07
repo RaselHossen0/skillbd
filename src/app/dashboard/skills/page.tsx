@@ -61,51 +61,84 @@ export default function SkillsPage() {
       name: "TypeScript",
       category: "Programming",
       questions: 10,
-      duration: "15 min",
+      level: "medium",
     },
     {
       name: "Next.js",
       category: "Frontend",
       questions: 12,
-      duration: "20 min",
+      level: "difficult",
     },
     {
       name: "Python",
       category: "Programming",
       questions: 15,
-      duration: "25 min",
+      level: "easy",
     },
     {
       name: "Data Structures",
       category: "Computer Science",
       questions: 15,
-      duration: "30 min",
+      level: "difficult",
     },
     {
       name: "PostgreSQL",
       category: "Database",
       questions: 10,
-      duration: "15 min",
+      level: "medium",
     },
     {
       name: "DevOps",
       category: "Infrastructure",
       questions: 12,
-      duration: "20 min",
+      level: "difficult",
     },
   ];
+
+  // Calculate duration based on question count and difficulty
+  const calculateDuration = (questions: number, level: string) => {
+    // Base time per question in minutes
+    const baseTimePerQuestion = {
+      easy: 1,
+      medium: 1.5,
+      difficult: 2,
+    };
+
+    // Calculate total minutes
+    const totalMinutes = Math.ceil(
+      questions * baseTimePerQuestion[level as keyof typeof baseTimePerQuestion]
+    );
+
+    // Format duration
+    if (totalMinutes < 60) {
+      return `${totalMinutes} min`;
+    } else {
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    }
+  };
 
   // Function to generate questions using Claude
   const generateQuestions = async (skill: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Find the skill in availableSkills to get the question count
+      const skillInfo = availableSkills.find((s) => s.name === skill);
+      if (!skillInfo) {
+        throw new Error("Skill not found");
+      }
+
       const response = await fetch("/api/generate-questions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ skill }),
+        body: JSON.stringify({
+          skill,
+          questionCount: skillInfo.questions,
+        }),
       });
 
       const data = await response.json();
@@ -173,7 +206,16 @@ export default function SkillsPage() {
       }
     });
 
-    return Math.round((correctCount / generatedQuestions.length) * 5);
+    // Calculate percentage first
+    const percentage = (correctCount / generatedQuestions.length) * 100;
+
+    // Convert percentage to 5-point scale
+    // 90-100% = 5, 70-89% = 4, 50-69% = 3, 30-49% = 2, 0-29% = 1
+    if (percentage >= 90) return 5;
+    if (percentage >= 70) return 4;
+    if (percentage >= 50) return 3;
+    if (percentage >= 30) return 2;
+    return 1;
   };
 
   // Reset quiz state
@@ -304,8 +346,16 @@ export default function SkillsPage() {
                           <p className="font-medium">{skill.questions}</p>
                         </div>
                         <div>
+                          <p className="text-muted-foreground">Level</p>
+                          <p className="font-medium capitalize">
+                            {skill.level}
+                          </p>
+                        </div>
+                        <div className="col-span-2">
                           <p className="text-muted-foreground">Duration</p>
-                          <p className="font-medium">{skill.duration}</p>
+                          <p className="font-medium">
+                            {calculateDuration(skill.questions, skill.level)}
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -426,6 +476,16 @@ export default function SkillsPage() {
                     ? "Good job! You have solid foundational knowledge."
                     : "Keep learning! We recommend focusing on this skill more."}
                 </p>
+                <div className="text-sm text-muted-foreground mb-4">
+                  You got{" "}
+                  {
+                    answers.filter(
+                      (answer, index) =>
+                        answer === generatedQuestions[index].correctAnswer
+                    ).length
+                  }{" "}
+                  out of {generatedQuestions.length} questions correct.
+                </div>
                 <Progress
                   value={calculateResult() * 20}
                   className="h-2 w-full mb-4"
