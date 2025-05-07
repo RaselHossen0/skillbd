@@ -30,6 +30,58 @@ interface Application {
   applied_at: string;
 }
 
+// Mock applications data
+const mockApplications: Application[] = [
+  {
+    id: 1,
+    student: {
+      id: 1,
+      name: "Sarah Johnson",
+      email: "sarah.j@example.com",
+      avatar_url: "",
+      resume_url: "https://example.com/resume1.pdf",
+    },
+    job: {
+      id: 1,
+      title: "Frontend Developer Intern",
+    },
+    status: "PENDING",
+    applied_at: "2024-03-15T10:30:00Z",
+  },
+  {
+    id: 2,
+    student: {
+      id: 2,
+      name: "Michael Chen",
+      email: "michael.c@example.com",
+      avatar_url: "",
+      resume_url: "https://example.com/resume2.pdf",
+    },
+    job: {
+      id: 2,
+      title: "Full Stack Developer",
+    },
+    status: "ACCEPTED",
+    applied_at: "2024-03-10T14:20:00Z",
+  },
+  {
+    id: 3,
+    student: {
+      id: 3,
+      name: "Emily Davis",
+      email: "emily.d@example.com",
+      avatar_url: "",
+      resume_url: "https://example.com/resume3.pdf",
+    },
+    job: {
+      id: 3,
+      title: "UI/UX Designer",
+    },
+    status: "REJECTED",
+    applied_at: "2024-03-05T09:15:00Z",
+  },
+];
+
 export default function ApplicationsPage() {
   const { user } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -43,13 +95,8 @@ export default function ApplicationsPage() {
           user.employers &&
           user.employers.length > 0
         ) {
-          const employerId = user.employers[0].id;
-          const response = await fetch(
-            `/api/dashboard/applications?employerId=${employerId}`
-          );
-          if (!response.ok) throw new Error("Failed to fetch applications");
-          const data = await response.json();
-          setApplications(data.applications || []);
+          // Use mock data instead of fetching
+          setApplications(mockApplications);
         }
       } catch (error) {
         console.error("Error fetching applications:", error);

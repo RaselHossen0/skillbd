@@ -27,6 +27,62 @@ interface Session {
   };
 }
 
+// Mock interview sessions data
+const mockSessions: Session[] = [
+  {
+    id: 1,
+    title: "Technical Interview",
+    applicant_name: "Sarah Johnson",
+    date: "2024-03-20",
+    time: "10:00 AM",
+    status: "SCHEDULED",
+    meeting_link: "https://zoom.us/j/123456789",
+    job: {
+      title: "Frontend Developer",
+      company_name: "TechVision Ltd",
+    },
+  },
+  {
+    id: 2,
+    title: "System Design Interview",
+    applicant_name: "Michael Chen",
+    date: "2024-03-22",
+    time: "2:30 PM",
+    status: "SCHEDULED",
+    meeting_link: "https://zoom.us/j/987654321",
+    job: {
+      title: "Senior Software Engineer",
+      company_name: "Digital Solutions Inc",
+    },
+  },
+  {
+    id: 3,
+    title: "Behavioral Interview",
+    applicant_name: "Emily Davis",
+    date: "2024-03-15",
+    time: "11:00 AM",
+    status: "COMPLETED",
+    meeting_link: "https://zoom.us/j/456789123",
+    job: {
+      title: "Product Manager",
+      company_name: "Creative Studios",
+    },
+  },
+  {
+    id: 4,
+    title: "Technical Assessment",
+    applicant_name: "David Wilson",
+    date: "2024-03-18",
+    time: "3:00 PM",
+    status: "COMPLETED",
+    meeting_link: "https://zoom.us/j/789123456",
+    job: {
+      title: "Backend Developer",
+      company_name: "TechVision Ltd",
+    },
+  },
+];
+
 export default function InterviewsPage() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -40,13 +96,8 @@ export default function InterviewsPage() {
           user.employers &&
           user.employers.length > 0
         ) {
-          const employerId = user.employers[0].id;
-          const response = await fetch(
-            `/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`
-          );
-          if (!response.ok) throw new Error("Failed to fetch sessions");
-          const data = await response.json();
-          setSessions(data.sessions || []);
+          // Use mock data instead of fetching
+          setSessions(mockSessions);
         }
       } catch (error) {
         console.error("Error fetching sessions:", error);
