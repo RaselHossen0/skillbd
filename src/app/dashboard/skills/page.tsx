@@ -24,6 +24,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { BookOpen, Award, CheckCircle, XCircle, Clock } from "lucide-react";
 import Replicate from "replicate";
 
 interface Question {
@@ -226,93 +227,118 @@ export default function SkillsPage() {
     setQuizCompleted(false);
   };
 
+  // Function to get level color classes
+  const getLevelColorClass = (level: string) => {
+    switch(level) {
+      case "easy": return "text-green-600";
+      case "medium": return "text-yellow-600";
+      case "difficult": return "text-red-600";
+      default: return "";
+    }
+  };
+
+  // Function to get skill level color for progress bars
+  const getSkillLevelColor = (level: number) => {
+    if (level >= 4) return "bg-green-500";
+    if (level >= 3) return "bg-blue-500";
+    if (level >= 2) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">My Skills</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-3xl font-bold tracking-tight mb-2">My Skills</h2>
+          <p className="text-muted-foreground text-lg">
             Track your skill levels and take assessments to validate your
             expertise
           </p>
         </div>
-        <Button>Download Skill Certificate</Button>
+        <Button className="px-6 py-5 font-medium" size="lg">
+          <Award className="mr-2 h-5 w-5" />
+          Download Skill Certificate
+        </Button>
       </div>
 
-      <Tabs defaultValue="my-skills">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="my-skills" className="mb-6">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="my-skills">My Skills</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="my-skills" className="space-y-6">
+        <TabsContent value="my-skills" className="space-y-8">
           {/* Skills Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Skills Overview</CardTitle>
-              <CardDescription>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl mb-2">Skills Overview</CardTitle>
+              <CardDescription className="text-base">
                 Your current skill ratings and certifications
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+            <CardContent className="pb-6">
+              <div className="space-y-8">
                 {mySkills.map((skill) => (
-                  <div key={skill.name} className="space-y-2">
+                  <div key={skill.name} className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="font-medium">{skill.name}</span>
-                        <Badge variant="outline" className="ml-2">
+                        <span className="font-medium text-lg">{skill.name}</span>
+                        <Badge variant="outline" className="ml-3 px-3 py-1">
                           {skill.category}
                         </Badge>
                         {skill.verified && (
-                          <Badge className="ml-2 bg-green-500 hover:bg-green-600">
+                          <Badge className="ml-3 bg-green-500 hover:bg-green-600 px-3 py-1">
+                            <CheckCircle className="mr-1 h-3 w-3" />
                             Verified
                           </Badge>
                         )}
                       </div>
-                      <span className="text-sm font-medium">
+                      <span className="text-base font-semibold">
                         Level {skill.level}/5
                       </span>
                     </div>
-                    <Progress value={skill.level * 20} className="h-2" />
+                    <Progress 
+                      value={skill.level * 20} 
+                      className={`h-2.5 ${getSkillLevelColor(skill.level)}`}
+                    />
                   </div>
                 ))}
               </div>
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">
+            <CardFooter className="pt-2 pb-6 px-6">
+              <Button variant="outline" className="w-full py-5 text-base">
                 Add Manual Skill Entry
               </Button>
             </CardFooter>
           </Card>
 
           {/* Skill Recommendations */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recommended Skills</CardTitle>
-              <CardDescription>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl mb-2">Recommended Skills</CardTitle>
+              <CardDescription className="text-base">
                 Based on your profile and industry demand
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+            <CardContent className="pb-6">
+              <div className="grid gap-6 md:grid-cols-3">
                 {["TypeScript", "Docker", "AWS"].map((skill) => (
-                  <Card key={skill}>
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-base">{skill}</CardTitle>
+                  <Card key={skill} className="shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <CardHeader className="p-5">
+                      <CardTitle className="text-lg">{skill}</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
+                    <CardContent className="p-5 pt-0">
                       <p className="text-sm text-muted-foreground">
                         High demand in 85% of job listings in your target roles.
                       </p>
                     </CardContent>
-                    <CardFooter className="p-4 pt-0">
+                    <CardFooter className="p-5 pt-2">
                       <Button
                         variant="outline"
-                        className="w-full"
+                        className="w-full py-4"
                         onClick={() => startQuiz(skill)}
                       >
-                        Take Assessment
+                        <BookOpen className="mr-2 h-4 w-4" /> Take Assessment
                       </Button>
                     </CardFooter>
                   </Card>
@@ -324,44 +350,55 @@ export default function SkillsPage() {
 
         <TabsContent value="assessments" className="space-y-6">
           {/* Available Assessments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Skill Assessments</CardTitle>
-              <CardDescription>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl mb-2">Available Skill Assessments</CardTitle>
+              <CardDescription className="text-base">
                 Take assessments to verify your skill levels
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <CardContent className="pb-6">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {availableSkills.map((skill) => (
-                  <Card key={skill.name}>
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-base">{skill.name}</CardTitle>
-                      <CardDescription>{skill.category}</CardDescription>
+                  <Card key={skill.name} className="shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <CardHeader className="p-5">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg mb-1">{skill.name}</CardTitle>
+                          <CardDescription>{skill.category}</CardDescription>
+                        </div>
+                        <Badge className={`${
+                          skill.level === "easy" ? "bg-green-500 hover:bg-green-600" :
+                          skill.level === "medium" ? "bg-yellow-500 hover:bg-yellow-600" :
+                          "bg-red-500 hover:bg-red-600"
+                        } px-3 py-1`}>
+                          {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
+                        </Badge>
+                      </div>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Questions</p>
-                          <p className="font-medium">{skill.questions}</p>
+                    <CardContent className="p-5 pt-2">
+                      <div className="grid grid-cols-2 gap-5 text-sm mt-3">
+                        <div className="flex items-center">
+                          <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <div>
+                            <p className="text-muted-foreground mb-1">Questions</p>
+                            <p className="font-medium">{skill.questions}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-muted-foreground">Level</p>
-                          <p className="font-medium capitalize">
-                            {skill.level}
-                          </p>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-muted-foreground">Duration</p>
-                          <p className="font-medium">
-                            {calculateDuration(skill.questions, skill.level)}
-                          </p>
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <div>
+                            <p className="text-muted-foreground mb-1">Duration</p>
+                            <p className="font-medium">
+                              {calculateDuration(skill.questions, skill.level)}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-4 pt-0">
+                    <CardFooter className="p-5 pt-2">
                       <Button
-                        className="w-full"
+                        className="w-full py-4 font-medium"
                         onClick={() => startQuiz(skill.name)}
                       >
                         Start Assessment
@@ -381,8 +418,8 @@ export default function SkillsPage() {
         onOpenChange={(open) => !open && resetQuiz()}
       >
         <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-2xl">
               {isLoading
                 ? "Loading Assessment"
                 : error
@@ -392,20 +429,20 @@ export default function SkillsPage() {
                 : `${activeQuizSkill} Skill Assessment`}
             </DialogTitle>
             {!isLoading && !error && !quizCompleted && (
-              <DialogDescription>
+              <DialogDescription className="text-base mt-2">
                 Question {currentQuestion + 1} of {generatedQuestions.length}
               </DialogDescription>
             )}
           </DialogHeader>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <span className="ml-2">Generating questions...</span>
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <span className="ml-4 text-lg">Generating questions...</span>
             </div>
           ) : error ? (
-            <div className="py-8 text-center">
-              <div className="text-red-500 mb-4">Error: {error}</div>
+            <div className="py-10 text-center">
+              <div className="text-red-500 mb-6 text-lg">Error: {error}</div>
               <Button
                 onClick={() => {
                   setError(null);
@@ -413,6 +450,7 @@ export default function SkillsPage() {
                     generateQuestions(activeQuizSkill);
                   }
                 }}
+                className="px-6 py-2"
               >
                 Try Again
               </Button>
@@ -420,79 +458,123 @@ export default function SkillsPage() {
           ) : !quizCompleted ? (
             <>
               {generatedQuestions.length > 0 && (
-                <div className="py-4">
-                  <h3 className="font-medium mb-4">
+                <div className="py-6">
+                  <h3 className="font-medium text-lg mb-6">
                     {generatedQuestions[currentQuestion]?.question}
                   </h3>
-                  <RadioGroup className="space-y-3">
+                  <RadioGroup className="space-y-4">
                     {generatedQuestions[currentQuestion]?.options.map(
                       (option: string, index: number) => (
                         <div
                           key={index}
-                          className="flex items-center space-x-2"
+                          className={`flex items-center space-x-3 p-3 rounded-md border ${
+                            isAnswerCorrect !== null && option === generatedQuestions[currentQuestion].correctAnswer
+                              ? "border-green-500 bg-green-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
                         >
                           <RadioGroupItem
                             id={`option-${index}`}
                             value={option}
                             onClick={() => answerQuestion(option)}
                             disabled={isAnswerCorrect !== null}
+                            className="h-5 w-5"
                           />
-                          <Label htmlFor={`option-${index}`}>{option}</Label>
+                          <Label 
+                            htmlFor={`option-${index}`}
+                            className="flex-1 cursor-pointer text-base"
+                          >
+                            {option}
+                          </Label>
                         </div>
                       )
                     )}
                   </RadioGroup>
                   {isAnswerCorrect !== null && (
                     <div
-                      className={`mt-4 p-3 rounded-md ${
+                      className={`mt-6 p-4 rounded-md flex items-center ${
                         isAnswerCorrect
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {isAnswerCorrect
-                        ? "✓ Correct!"
-                        : "✗ Incorrect. Try again!"}
+                      {isAnswerCorrect ? (
+                        <>
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          <span>Correct answer!</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-5 w-5 mr-2" />
+                          <span>Incorrect. The correct answer is: {generatedQuestions[currentQuestion].correctAnswer}</span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
               )}
-              <DialogFooter>
-                <Button variant="outline" onClick={resetQuiz}>
+              <DialogFooter className="pt-4">
+                <Button variant="outline" onClick={resetQuiz} className="px-6 py-2">
                   Cancel
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <>
-              <div className="py-6 flex flex-col items-center justify-center">
-                <div className="text-7xl font-bold text-primary mb-4">
+              <div className="py-8 flex flex-col items-center justify-center">
+                <div className={`text-8xl font-bold mb-6 ${
+                  calculateResult() >= 4 ? "text-green-500" :
+                  calculateResult() >= 3 ? "text-blue-500" :
+                  "text-yellow-500"
+                }`}>
                   {calculateResult()}/5
                 </div>
-                <p className="text-center text-muted-foreground mb-4">
+                <p className="text-center text-lg mb-6 max-w-md mx-auto">
                   {calculateResult() >= 4
                     ? "Excellent! You've demonstrated advanced knowledge."
                     : calculateResult() >= 3
                     ? "Good job! You have solid foundational knowledge."
                     : "Keep learning! We recommend focusing on this skill more."}
                 </p>
-                <div className="text-sm text-muted-foreground mb-4">
-                  You got{" "}
-                  {
-                    answers.filter(
-                      (answer, index) =>
-                        answer === generatedQuestions[index].correctAnswer
-                    ).length
-                  }{" "}
-                  out of {generatedQuestions.length} questions correct.
+                <div className="text-base text-muted-foreground mb-6 flex items-center">
+                  <span className="font-medium">
+                    {
+                      answers.filter(
+                        (answer, index) =>
+                          answer === generatedQuestions[index].correctAnswer
+                      ).length
+                    }{" "}
+                    out of {generatedQuestions.length} questions correct
+                  </span>
+                  <span className="mx-2">•</span>
+                  <span>
+                    {Math.round(
+                      (answers.filter(
+                        (answer, index) =>
+                          answer === generatedQuestions[index].correctAnswer
+                      ).length /
+                        generatedQuestions.length) *
+                        100
+                    )}% accuracy
+                  </span>
                 </div>
                 <Progress
                   value={calculateResult() * 20}
-                  className="h-2 w-full mb-4"
+                  className={`h-3 w-full mb-6 ${
+                    calculateResult() >= 4 ? "bg-green-500" :
+                    calculateResult() >= 3 ? "bg-blue-500" :
+                    calculateResult() >= 2 ? "bg-yellow-500" :
+                    "bg-red-500"
+                  }`}
                 />
               </div>
-              <DialogFooter>
-                <Button onClick={resetQuiz}>Close</Button>
+              <DialogFooter className="pt-4">
+                <Button variant="outline" className="mr-2 px-6 py-2">
+                  View Details
+                </Button>
+                <Button onClick={resetQuiz} className="px-6 py-2">
+                  Close
+                </Button>
               </DialogFooter>
             </>
           )}
