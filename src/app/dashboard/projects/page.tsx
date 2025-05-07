@@ -14,14 +14,14 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -49,6 +49,112 @@ interface Project {
   budget?: number;
 }
 
+// Mock projects data
+const mockProjects: Project[] = [
+  {
+    id: 1,
+    title: "E-commerce Platform Development",
+    description:
+      "Build a full-stack e-commerce platform with React, Node.js, and MongoDB. Features include user authentication, product catalog, shopping cart, and payment integration.",
+    student: {
+      id: 1,
+      name: "Sarah Johnson",
+      avatar_url: "https://i.pravatar.cc/150?img=1",
+    },
+    status: "IN_PROGRESS",
+    progress: 65,
+    due_date: "2024-04-15",
+    skills: ["React", "Node.js", "MongoDB", "Stripe API"],
+    last_updated: "2024-03-18",
+    type: "CHALLENGE",
+  },
+  {
+    id: 2,
+    title: "AI-Powered Task Manager",
+    description:
+      "Create an intelligent task management application that uses AI to prioritize and categorize tasks. Include features for team collaboration and progress tracking.",
+    student: {
+      id: 2,
+      name: "Michael Chen",
+      avatar_url: "https://i.pravatar.cc/150?img=2",
+    },
+    status: "REVIEW",
+    progress: 100,
+    due_date: "2024-03-20",
+    skills: ["Python", "TensorFlow", "FastAPI", "PostgreSQL"],
+    last_updated: "2024-03-19",
+    type: "CHALLENGE",
+  },
+  {
+    id: 3,
+    title: "Mobile Fitness App",
+    description:
+      "Develop a cross-platform mobile application for tracking workouts, nutrition, and fitness goals. Include social features and progress visualization.",
+    student: {
+      id: 3,
+      name: "Emily Davis",
+      avatar_url: "https://i.pravatar.cc/150?img=3",
+    },
+    status: "COMPLETED",
+    progress: 100,
+    due_date: "2024-03-10",
+    skills: ["React Native", "Firebase", "Redux", "Node.js"],
+    last_updated: "2024-03-10",
+    type: "CHALLENGE",
+  },
+  {
+    id: 4,
+    title: "Real Estate Listing Platform",
+    description:
+      "Build a modern real estate platform with advanced search, virtual tours, and property management features. Focus on user experience and performance.",
+    student: {
+      id: 0,
+      name: "Not Assigned",
+    },
+    status: "OPEN",
+    progress: 0,
+    skills: ["Vue.js", "Django", "PostgreSQL", "AWS"],
+    last_updated: "2024-03-15",
+    type: "AVAILABLE",
+    company_name: "TechVision Ltd",
+    budget: 5000,
+  },
+  {
+    id: 5,
+    title: "Healthcare Management System",
+    description:
+      "Create a comprehensive healthcare management system for clinics. Features include patient records, appointment scheduling, and billing management.",
+    student: {
+      id: 0,
+      name: "Not Assigned",
+    },
+    status: "OPEN",
+    progress: 0,
+    skills: ["Java", "Spring Boot", "MySQL", "Docker"],
+    last_updated: "2024-03-17",
+    type: "AVAILABLE",
+    company_name: "Digital Solutions Inc",
+    budget: 8000,
+  },
+  {
+    id: 6,
+    title: "Social Media Analytics Dashboard",
+    description:
+      "Develop a dashboard for analyzing social media metrics and trends. Include data visualization, reporting, and automated insights.",
+    student: {
+      id: 0,
+      name: "Not Assigned",
+    },
+    status: "OPEN",
+    progress: 0,
+    skills: ["React", "Python", "MongoDB", "D3.js"],
+    last_updated: "2024-03-16",
+    type: "AVAILABLE",
+    company_name: "Creative Studios",
+    budget: 6000,
+  },
+];
+
 export default function ProjectsPage() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -67,12 +173,8 @@ export default function ProjectsPage() {
     async function fetchProjects() {
       try {
         if (user?.id) {
-          const response = await fetch(
-            `/api/dashboard/projects?userId=${user.id}&userRole=${user.role}`
-          );
-          if (!response.ok) throw new Error("Failed to fetch projects");
-          const data = await response.json();
-          setProjects(data.projects || []);
+          // Use mock data instead of fetching
+          setProjects(mockProjects);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -104,8 +206,12 @@ export default function ProjectsPage() {
           ...projectFormData,
           employer_id: employerId,
           userRole: "EMPLOYER",
-          technologies: projectFormData.technologies.filter(tech => tech.trim() !== ""),
-          budget: projectFormData.budget ? parseFloat(projectFormData.budget) : undefined,
+          technologies: projectFormData.technologies.filter(
+            (tech) => tech.trim() !== ""
+          ),
+          budget: projectFormData.budget
+            ? parseFloat(projectFormData.budget)
+            : undefined,
         }),
       });
 
@@ -167,7 +273,7 @@ export default function ProjectsPage() {
   const renderProject = (project: Project) => {
     // Check if we need to handle a project without a student (like available projects)
     const hasStudent = project.student && project.student.name;
-    
+
     // Determine badge variant based on status
     const getBadgeVariant = () => {
       if (project.status === "COMPLETED") return "default";
@@ -175,7 +281,7 @@ export default function ProjectsPage() {
       if (project.status === "OPEN") return "outline";
       return "outline";
     };
-    
+
     // Format the status text
     const getStatusText = () => {
       if (project.type === "APPLICATION") {
@@ -183,7 +289,7 @@ export default function ProjectsPage() {
       }
       return project.status.replace("_", " ");
     };
-    
+
     return (
       <Card key={project.id} className="overflow-hidden">
         <CardHeader className="pb-4">
@@ -226,7 +332,7 @@ export default function ProjectsPage() {
                 {project.description}
               </p>
             </div>
-            
+
             {project.skills && project.skills.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium mb-3">Skills</h4>
@@ -239,7 +345,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
             )}
-            
+
             {project.progress !== undefined && (
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -251,7 +357,7 @@ export default function ProjectsPage() {
                 <Progress value={project.progress} className="h-2" />
               </div>
             )}
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {project.due_date && (
                 <div>
@@ -261,7 +367,7 @@ export default function ProjectsPage() {
                   </p>
                 </div>
               )}
-              
+
               {project.last_updated && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Last Updated</h4>
@@ -270,7 +376,7 @@ export default function ProjectsPage() {
                   </p>
                 </div>
               )}
-              
+
               {project.budget && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Budget</h4>
@@ -280,18 +386,18 @@ export default function ProjectsPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex justify-end gap-3">
               <Button variant="outline" size="sm" className="px-4">
                 View Details
               </Button>
-              
+
               {user?.role === "STUDENT" && project.type === "AVAILABLE" && (
                 <Button size="sm" className="px-4">
                   Apply Now
                 </Button>
               )}
-              
+
               {project.status === "REVIEW" && (
                 <Button size="sm" className="px-4">
                   Review Project
@@ -321,9 +427,7 @@ export default function ProjectsPage() {
   const completedProjects = projects.filter(
     (project) => project.status === "COMPLETED"
   );
-  const openProjects = projects.filter(
-    (project) => project.status === "OPEN"
-  );
+  const openProjects = projects.filter((project) => project.status === "OPEN");
 
   return (
     <div className="space-y-8">
@@ -334,7 +438,7 @@ export default function ProjectsPage() {
             Manage and review student projects
           </p>
         </div>
-        
+
         {user?.role === "EMPLOYER" && (
           <Dialog open={creatingProject} onOpenChange={setCreatingProject}>
             <DialogTrigger asChild>
@@ -459,7 +563,10 @@ export default function ProjectsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setCreatingProject(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setCreatingProject(false)}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleCreateProject}>Create Project</Button>
@@ -490,7 +597,9 @@ export default function ProjectsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div>
-                        <CardTitle className="text-xl">{project.title}</CardTitle>
+                        <CardTitle className="text-xl">
+                          {project.title}
+                        </CardTitle>
                         <CardDescription className="mt-1.5">
                           <div className="flex items-center space-x-2">
                             <Avatar className="h-6 w-6">
@@ -523,7 +632,9 @@ export default function ProjectsPage() {
                   <CardContent>
                     <div className="space-y-6">
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Description</h4>
+                        <h4 className="text-sm font-medium mb-2">
+                          Description
+                        </h4>
                         <p className="text-sm text-muted-foreground">
                           {project.description}
                         </p>
@@ -554,7 +665,9 @@ export default function ProjectsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {project.due_date && (
                           <div>
-                            <h4 className="text-sm font-medium mb-2">Due Date</h4>
+                            <h4 className="text-sm font-medium mb-2">
+                              Due Date
+                            </h4>
                             <p className="text-sm text-muted-foreground">
                               {project.due_date}
                             </p>
@@ -601,7 +714,9 @@ export default function ProjectsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div>
-                        <CardTitle className="text-xl">{project.title}</CardTitle>
+                        <CardTitle className="text-xl">
+                          {project.title}
+                        </CardTitle>
                         <CardDescription className="mt-1.5">
                           <div className="flex items-center space-x-2">
                             <Avatar className="h-6 w-6">
@@ -634,7 +749,9 @@ export default function ProjectsPage() {
                   <CardContent>
                     <div className="space-y-6">
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Description</h4>
+                        <h4 className="text-sm font-medium mb-2">
+                          Description
+                        </h4>
                         <p className="text-sm text-muted-foreground">
                           {project.description}
                         </p>
@@ -665,7 +782,9 @@ export default function ProjectsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {project.due_date && (
                           <div>
-                            <h4 className="text-sm font-medium mb-2">Due Date</h4>
+                            <h4 className="text-sm font-medium mb-2">
+                              Due Date
+                            </h4>
                             <p className="text-sm text-muted-foreground">
                               {project.due_date}
                             </p>
@@ -712,7 +831,9 @@ export default function ProjectsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div>
-                        <CardTitle className="text-xl">{project.title}</CardTitle>
+                        <CardTitle className="text-xl">
+                          {project.title}
+                        </CardTitle>
                         <CardDescription className="mt-1.5">
                           <div className="flex items-center space-x-2">
                             <Avatar className="h-6 w-6">
@@ -745,7 +866,9 @@ export default function ProjectsPage() {
                   <CardContent>
                     <div className="space-y-6">
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Description</h4>
+                        <h4 className="text-sm font-medium mb-2">
+                          Description
+                        </h4>
                         <p className="text-sm text-muted-foreground">
                           {project.description}
                         </p>
@@ -776,7 +899,9 @@ export default function ProjectsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {project.due_date && (
                           <div>
-                            <h4 className="text-sm font-medium mb-2">Due Date</h4>
+                            <h4 className="text-sm font-medium mb-2">
+                              Due Date
+                            </h4>
                             <p className="text-sm text-muted-foreground">
                               {project.due_date}
                             </p>
@@ -861,7 +986,9 @@ export default function ProjectsPage() {
             ) : (
               <div className="flex flex-col items-center justify-center border rounded-lg p-8">
                 <div className="text-center">
-                  <h3 className="text-lg font-medium mb-2">No projects in progress</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    No projects in progress
+                  </h3>
                   <p className="text-muted-foreground">
                     You don't have any projects in progress at the moment.
                   </p>
@@ -878,7 +1005,9 @@ export default function ProjectsPage() {
             ) : (
               <div className="flex flex-col items-center justify-center border rounded-lg p-8">
                 <div className="text-center">
-                  <h3 className="text-lg font-medium mb-2">No completed projects</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    No completed projects
+                  </h3>
                   <p className="text-muted-foreground">
                     You don't have any completed projects yet.
                   </p>
@@ -904,10 +1033,10 @@ export default function ProjectsPage() {
           </TabsList>
 
           <TabsContent value="available" className="space-y-6">
-            {projects.filter(p => p.type === "AVAILABLE").length > 0 ? (
+            {projects.filter((p) => p.type === "AVAILABLE").length > 0 ? (
               projects
-                .filter(p => p.type === "AVAILABLE")
-                .map(project => renderProject(project))
+                .filter((p) => p.type === "AVAILABLE")
+                .map((project) => renderProject(project))
             ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16">
@@ -920,10 +1049,10 @@ export default function ProjectsPage() {
           </TabsContent>
 
           <TabsContent value="applied" className="space-y-6">
-            {projects.filter(p => p.type === "APPLICATION").length > 0 ? (
+            {projects.filter((p) => p.type === "APPLICATION").length > 0 ? (
               projects
-                .filter(p => p.type === "APPLICATION")
-                .map(project => renderProject(project))
+                .filter((p) => p.type === "APPLICATION")
+                .map((project) => renderProject(project))
             ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16">
@@ -936,10 +1065,11 @@ export default function ProjectsPage() {
           </TabsContent>
 
           <TabsContent value="assigned" className="space-y-6">
-            {projects.filter(p => p.type === "CHALLENGE" || p.assigned).length > 0 ? (
+            {projects.filter((p) => p.type === "CHALLENGE" || p.assigned)
+              .length > 0 ? (
               projects
-                .filter(p => p.type === "CHALLENGE" || p.assigned)
-                .map(project => renderProject(project))
+                .filter((p) => p.type === "CHALLENGE" || p.assigned)
+                .map((project) => renderProject(project))
             ) : (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16">

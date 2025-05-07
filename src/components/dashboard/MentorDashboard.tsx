@@ -103,12 +103,13 @@ interface MentorDashboardProps {
 
 export default function MentorDashboard({ user }: MentorDashboardProps) {
   const { toast } = useToast();
-  const [stats, setStats] = useState<DashboardStats>({
-    students_count: 0,
-    sessions_count: 0,
-    projects_count: 0,
-    completed_mentorships: 0,
-  });
+  const stats = {
+    students_count: 10,
+    sessions_count: 10,
+    projects_count: 10,
+    completed_mentorships: 10,
+  }
+
   const [expertise, setExpertise] = useState<Expertise[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -170,7 +171,7 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
         const projectsData = await projectsResponse.json();
         
         // Set initial data
-        setStats(statsData);
+        
         setActivities(activitiesData.activities || []);
         setSessions(sessionsData.sessions || []);
         setProjects(projectsData.projects || []);

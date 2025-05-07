@@ -35,7 +35,6 @@ export default function DashboardLayout({
   const mentorNavItems = [
     { name: "Overview", href: "/dashboard" },
     { name: "Expertise", href: "/dashboard/expertise" },
-    { name: "Sessions", href: "/dashboard/sessions" },
     { name: "Students", href: "/dashboard/students" },
     { name: "Projects", href: "/dashboard/projects" },
   ];

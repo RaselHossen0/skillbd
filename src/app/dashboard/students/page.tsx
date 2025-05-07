@@ -30,6 +30,85 @@ interface Student {
   last_session?: string;
 }
 
+// Mock students data
+const mockStudents: Student[] = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    email: "sarah.johnson@example.com",
+    avatar_url: "https://i.pravatar.cc/150?img=1",
+    skills: ["React", "TypeScript", "Node.js", "MongoDB"],
+    progress: {
+      completed_sessions: 8,
+      total_sessions: 12,
+      completed_projects: 3,
+      total_projects: 4,
+    },
+    status: "ACTIVE",
+    last_session: "2024-03-15",
+  },
+  {
+    id: 2,
+    name: "Michael Chen",
+    email: "michael.chen@example.com",
+    avatar_url: "https://i.pravatar.cc/150?img=2",
+    skills: ["Python", "Django", "PostgreSQL", "AWS"],
+    progress: {
+      completed_sessions: 6,
+      total_sessions: 10,
+      completed_projects: 2,
+      total_projects: 3,
+    },
+    status: "ACTIVE",
+    last_session: "2024-03-18",
+  },
+  {
+    id: 3,
+    name: "Emily Davis",
+    email: "emily.davis@example.com",
+    avatar_url: "https://i.pravatar.cc/150?img=3",
+    skills: ["Java", "Spring Boot", "MySQL", "Docker"],
+    progress: {
+      completed_sessions: 4,
+      total_sessions: 8,
+      completed_projects: 1,
+      total_projects: 2,
+    },
+    status: "ACTIVE",
+    last_session: "2024-03-10",
+  },
+  {
+    id: 4,
+    name: "David Wilson",
+    email: "david.wilson@example.com",
+    avatar_url: "https://i.pravatar.cc/150?img=4",
+    skills: ["JavaScript", "Vue.js", "Express", "MongoDB"],
+    progress: {
+      completed_sessions: 2,
+      total_sessions: 6,
+      completed_projects: 0,
+      total_projects: 2,
+    },
+    status: "INACTIVE",
+    last_session: "2024-02-28",
+  },
+  {
+    id: 5,
+    name: "Lisa Anderson",
+    email: "lisa.anderson@example.com",
+    avatar_url: "https://i.pravatar.cc/150?img=5",
+    skills: ["C#", ".NET", "SQL Server", "Azure"],
+    progress: {
+      completed_sessions: 3,
+      total_sessions: 8,
+      completed_projects: 1,
+      total_projects: 3,
+    },
+    status: "INACTIVE",
+    last_session: "2024-03-01",
+  },
+];
+
 export default function StudentsPage() {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
@@ -39,12 +118,8 @@ export default function StudentsPage() {
     async function fetchStudents() {
       try {
         if (user?.role === "MENTOR") {
-          const response = await fetch(
-            `/api/dashboard/students?userId=${user.id}`
-          );
-          if (!response.ok) throw new Error("Failed to fetch students");
-          const data = await response.json();
-          setStudents(data.students || []);
+          // Use mock data instead of fetching
+          setStudents(mockStudents);
         }
       } catch (error) {
         console.error("Error fetching students:", error);
