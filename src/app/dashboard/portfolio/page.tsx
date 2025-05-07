@@ -17,97 +17,84 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function PortfolioPage() {
   const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
 
-  // Mock user profile data
-  const profile = {
-    name: "John Doe",
-    title: "Full Stack Developer",
-    university: "University of Dhaka",
-    graduationYear: 2023,
-    bio: "Passionate developer with experience in React, Node.js, and MongoDB. Looking for opportunities to work on challenging projects and learn new technologies.",
-    image: "",
-    contact: {
-      email: "john.doe@example.com",
-      phone: "+880 1712-345678",
-      linkedIn: "linkedin.com/in/johndoe",
-      github: "github.com/johndoe",
+  // Mock data for skills and projects
+  const mockSkills = [
+    { name: "JavaScript", level: 4, category: "Programming", verified: true },
+    { name: "React.js", level: 3, category: "Frontend", verified: true },
+    { name: "Node.js", level: 3, category: "Backend", verified: false },
+    { name: "UI/UX Design", level: 4, category: "Design", verified: true },
+    { name: "MongoDB", level: 2, category: "Database", verified: false },
+  ];
+
+  const mockProjects = [
+    {
+      id: 1,
+      title: "E-commerce Website UI Design",
+      description:
+        "Designed a modern and responsive UI for an e-commerce platform selling handcrafted items.",
+      company: "FashionBD Retail",
+      completionDate: "October 2023",
+      skills: ["UI/UX", "Figma", "Responsive Design"],
+      imageUrl: "",
+      demoLink: "https://demo-ecommerce.example.com",
+      featured: true,
     },
-    skills: [
-      { name: "JavaScript", level: 4, category: "Programming", verified: true },
-      { name: "React.js", level: 3, category: "Frontend", verified: true },
-      { name: "Node.js", level: 3, category: "Backend", verified: false },
-      { name: "UI/UX Design", level: 4, category: "Design", verified: true },
-      { name: "MongoDB", level: 2, category: "Database", verified: false },
-    ],
-    projects: [
-      {
-        id: 1,
-        title: "E-commerce Website UI Design",
-        description:
-          "Designed a modern and responsive UI for an e-commerce platform selling handcrafted items.",
-        company: "FashionBD Retail",
-        completionDate: "October 2023",
-        skills: ["UI/UX", "Figma", "Responsive Design"],
-        imageUrl: "",
-        demoLink: "https://demo-ecommerce.example.com",
-        featured: true,
-      },
-      {
-        id: 2,
-        title: "Task Management App",
-        description:
-          "Built a full-stack task management application with authentication, task tracking, and reporting features.",
-        company: "Personal Project",
-        completionDate: "August 2023",
-        skills: ["React.js", "Node.js", "MongoDB", "Express"],
-        imageUrl: "",
-        demoLink: "https://tasks-app.example.com",
-        featured: true,
-      },
-      {
-        id: 3,
-        title: "Restaurant Booking System",
-        description:
-          "Developed a booking system for a local restaurant with table management and reservation features.",
-        company: "Local Business",
-        completionDate: "May 2023",
-        skills: ["JavaScript", "Firebase", "HTML/CSS"],
-        imageUrl: "",
-        demoLink: "https://booking-system.example.com",
-        featured: false,
-      },
-    ],
-    certifications: [
-      {
-        name: "React Developer Certification",
-        issuedBy: "IndustryHuntBD Bangladesh",
-        date: "November 2023",
-        credentialId: "SBD-REACT-2023",
-      },
-      {
-        name: "MongoDB Database Design",
-        issuedBy: "MongoDB University",
-        date: "September 2023",
-        credentialId: "MDBU-78932",
-      },
-    ],
-    mentorship: [
-      {
-        mentor: "Sarah Johnson",
-        company: "TechVision Ltd",
-        duration: "3 months",
-        topics: ["Frontend Development", "Career Guidance"],
-      },
-    ],
+    {
+      id: 2,
+      title: "Task Management App",
+      description:
+        "Built a full-stack task management application with authentication, task tracking, and reporting features.",
+      company: "Personal Project",
+      completionDate: "August 2023",
+      skills: ["React.js", "Node.js", "MongoDB", "Express"],
+      imageUrl: "",
+      demoLink: "https://tasks-app.example.com",
+      featured: true,
+    },
+    {
+      id: 3,
+      title: "Restaurant Booking System",
+      description:
+        "Developed a booking system for a local restaurant with table management and reservation features.",
+      company: "Local Business",
+      completionDate: "May 2023",
+      skills: ["JavaScript", "Firebase", "HTML/CSS"],
+      imageUrl: "",
+      demoLink: "https://booking-system.example.com",
+      featured: false,
+    },
+  ];
+
+  // Use authenticated user data with mock skills and projects
+  const profile = {
+    name: user?.name || "",
+    title: user?.title || "",
+    university: user?.university || "",
+    graduationYear: user?.graduation_year || "",
+    bio: user?.bio || "",
+    image: user?.avatar_url || "",
+    contact: {
+      email: user?.email || "",
+      phone: user?.phone || "",
+      linkedIn: user?.linkedin_url || "",
+      github: user?.github_url || "",
+    },
+    skills: mockSkills,
+    projects: mockProjects,
+    certifications: user?.certifications || [],
+    mentorship: user?.mentorship || [],
     settings: {
-      isPublic: true,
-      showContact: true,
-      showProjects: true,
-      showCertifications: true,
-      showMentorship: true,
+      isPublic: user?.settings?.is_public || true,
+      showContact: user?.settings?.show_contact || true,
+      showProjects: user?.settings?.show_projects || true,
+      showCertifications: user?.settings?.show_certifications || true,
+      showMentorship: user?.settings?.show_mentorship || true,
     },
   };
 
@@ -175,7 +162,7 @@ export default function PortfolioPage() {
                     {profile.title}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {profile.university}, Class of {profile.graduationYear}
+                    University of Dhaka, Class of 2025
                   </p>
 
                   {profile.settings.showContact && (

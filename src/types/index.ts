@@ -11,6 +11,49 @@ export interface User {
   avatar_url?: string;
   created_at: string;
   updated_at: string;
+  // Portfolio fields
+  title?: string;
+  university?: string;
+  graduation_year?: string;
+  phone?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  skills?: Array<{
+    name: string;
+    level: number;
+    category: string;
+    verified: boolean;
+  }>;
+  projects?: Array<{
+    id: number;
+    title: string;
+    description: string;
+    company: string;
+    completionDate: string;
+    skills: string[];
+    imageUrl: string;
+    demoLink: string;
+    featured: boolean;
+  }>;
+  certifications?: Array<{
+    name: string;
+    issuedBy: string;
+    date: string;
+    credentialId: string;
+  }>;
+  mentorship?: Array<{
+    mentor: string;
+    company: string;
+    duration: string;
+    topics: string[];
+  }>;
+  settings?: {
+    is_public: boolean;
+    show_contact: boolean;
+    show_projects: boolean;
+    show_certifications: boolean;
+    show_mentorship: boolean;
+  };
   // Relationship fields
   students?: Student[];
   mentors?: Mentor[];

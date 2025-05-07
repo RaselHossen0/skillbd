@@ -34,6 +34,39 @@ interface Question {
   correctAnswer: string;
 }
 
+const mockAssessments = [
+  {
+    name: "JavaScript",
+    category: "Programming",
+    questions: 10,
+    level: "medium",
+  },
+  {
+    name: "TypeScript",
+    category: "Programming",
+    questions: 10,
+    level: "medium",
+  },
+  {
+    name: "React",
+    category: "Frontend",
+    questions: 8,
+    level: "easy",
+  },
+  {
+    name: "Node.js",
+    category: "Backend",
+    questions: 12,
+    level: "difficult",
+  },
+  {
+    name: "UI/UX Design",
+    category: "Design",
+    questions: 7,
+    level: "easy",
+  },
+];
+
 export default function SkillsPage() {
   const [activeQuizSkill, setActiveQuizSkill] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -341,11 +374,9 @@ export default function SkillsPage() {
           {/* Skill Recommendations */}
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-2xl mb-2">
-                Recommended Skills
-              </CardTitle>
+              <CardTitle className="text-2xl mb-2">Rated Assessments</CardTitle>
               <CardDescription className="text-base">
-                Based on your profile and industry demand
+                These count towards your official skill rating
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-6">
@@ -384,15 +415,15 @@ export default function SkillsPage() {
           <Card className="shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-2xl mb-2">
-                Available Skill Assessments
+                Self-Testing Assessments
               </CardTitle>
               <CardDescription className="text-base">
-                Take assessments to verify your skill levels
+                Practice and self-test your skills (not rated)
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-6">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {availableSkills.map((skill) => (
+                {mockAssessments.map((skill) => (
                   <Card
                     key={skill.name}
                     className="shadow-sm hover:shadow-md transition-shadow duration-300"
