@@ -169,7 +169,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
       }
 
       const employerId = user.employers[0].id;
-      const response = await fetch("/api/dashboard/employers/jobs", {
+      const response = await fetch("/api/jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,8 +182,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create job");
+        throw new Error("Failed to create job");
       }
 
       // Refresh jobs list
@@ -193,12 +192,6 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
       if (!jobsResponse.ok) throw new Error("Failed to fetch jobs");
       const jobsData = await jobsResponse.json();
       setJobs(jobsData.jobs || []);
-
-      // Update stats
-      setStats(prev => ({
-        ...prev,
-        jobs_count: prev.jobs_count + 1
-      }));
 
       // Reset form and close dialog
       setJobFormData({

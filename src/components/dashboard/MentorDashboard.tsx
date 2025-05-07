@@ -55,7 +55,7 @@ interface DashboardStats {
 
 interface Expertise {
   id: string | number;
-  name: string;
+    name: string;
   level: string;
   students_count: number;
 }
@@ -139,14 +139,14 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
     async function fetchData() {
       try {
         setLoading(true);
-
+        
         // Fetch stats
         const statsResponse = await fetch(
           `/api/dashboard/stats?userId=${user.id}&userRole=${user.role}`
         );
         if (!statsResponse.ok) throw new Error("Failed to fetch stats");
         const statsData = await statsResponse.json();
-
+        
         // Fetch activities
         const activitiesResponse = await fetch(
           `/api/dashboard/activities?userId=${user.id}`
@@ -154,7 +154,7 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
         if (!activitiesResponse.ok)
           throw new Error("Failed to fetch activities");
         const activitiesData = await activitiesResponse.json();
-
+        
         // Fetch sessions
         const sessionsResponse = await fetch(
           `/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`
@@ -168,17 +168,17 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
         );
         if (!projectsResponse.ok) throw new Error("Failed to fetch projects");
         const projectsData = await projectsResponse.json();
-
+        
         // Set initial data
         setStats(statsData);
         setActivities(activitiesData.activities || []);
         setSessions(sessionsData.sessions || []);
         setProjects(projectsData.projects || []);
-
+        
         // Fetch mentor-specific data
         if (user.role === "MENTOR" && user.mentors && user.mentors.length > 0) {
           const mentorId = user.mentors[0].id;
-
+          
           // Fetch expertise
           const expertiseResponse = await fetch(
             `/api/dashboard/mentors/expertise?mentorId=${mentorId}`
@@ -186,7 +186,7 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
           if (!expertiseResponse.ok)
             throw new Error("Failed to fetch expertise");
           const expertiseData = await expertiseResponse.json();
-
+          
           setExpertise(expertiseData.expertise || []);
         }
       } catch (error) {
@@ -195,10 +195,10 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
         setLoading(false);
       }
     }
-
+    
     fetchData();
   }, [user]);
-
+  
   // Fetch students for the project creation form
   useEffect(() => {
     async function fetchStudents() {
@@ -307,7 +307,7 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
       console.error("Error updating project status:", error);
     }
   };
-
+  
   // Render a session item
   const renderSession = (session: Session) => {
     return (
@@ -352,7 +352,7 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
       </div>
     );
   };
-
+  
   // Modify the renderProject function to include the review action
   const renderProject = (project: Project) => {
     return (
@@ -725,110 +725,110 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
-          {/* Stats Overview */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      {/* Stats Overview */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Total Students
                 </CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </CardHeader>
-              <CardContent>
+            </svg>
+          </CardHeader>
+          <CardContent>
                 <div className="text-2xl font-bold">{stats.students_count}</div>
                 <p className="text-xs text-muted-foreground">Active students</p>
-              </CardContent>
-            </Card>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Sessions</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
                   <rect width="20" height="14" x="2" y="5" rx="2" />
                   <path d="M2 10h20" />
-                </svg>
-              </CardHeader>
-              <CardContent>
+            </svg>
+          </CardHeader>
+          <CardContent>
                 <div className="text-2xl font-bold">{stats.sessions_count}</div>
-                <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
                   Total sessions conducted
-                </p>
-              </CardContent>
-            </Card>
+            </p>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Projects</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-              </CardHeader>
-              <CardContent>
+            </svg>
+          </CardHeader>
+          <CardContent>
                 <div className="text-2xl font-bold">{stats.projects_count}</div>
                 <p className="text-xs text-muted-foreground">Active projects</p>
-              </CardContent>
-            </Card>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              </CardHeader>
-              <CardContent>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              className="h-4 w-4 text-muted-foreground"
+            >
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          </CardHeader>
+          <CardContent>
                 <div className="text-2xl font-bold">
                   {stats.completed_mentorships}
                 </div>
-                <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
                   Completed mentorships
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-            {/* Expertise Areas */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        {/* Expertise Areas */}
             <Card className="md:col-span-2 lg:col-span-4">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -839,9 +839,9 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Expertise
                   </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
                   {displayExpertise.length > 0 ? (
                     displayExpertise.map((exp) => renderExpertise(exp))
                   ) : (
@@ -858,30 +858,30 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
                       </Button>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Recent Activities */}
+        {/* Recent Activities */}
             <Card className="md:col-span-2 lg:col-span-3">
-              <CardHeader>
-                <CardTitle>Recent Activities</CardTitle>
-                <CardDescription>Your latest interactions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {displayActivities.map((activity) => (
+          <CardHeader>
+            <CardTitle>Recent Activities</CardTitle>
+            <CardDescription>Your latest interactions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {displayActivities.map((activity) => (
                     <div
                       key={activity.id}
                       className="flex items-center p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
                     >
-                      <div className="space-y-1 w-full">
-                        <p className="text-sm font-medium leading-none">
-                          {activity.title}
-                        </p>
-                        <div className="flex items-center pt-2 justify-between">
-                          <div className="flex items-center gap-2">
-                            {activity.type === "SESSION_COMPLETED" && (
+                  <div className="space-y-1 w-full">
+                    <p className="text-sm font-medium leading-none">
+                      {activity.title}
+                    </p>
+                    <div className="flex items-center pt-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        {activity.type === "SESSION_COMPLETED" && (
                               <Badge className="bg-green-500 hover:bg-green-600">
                                 Completed
                               </Badge>
@@ -895,41 +895,41 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
                               <Badge className="bg-purple-500 hover:bg-purple-600">
                                 Review
                               </Badge>
-                            )}
-                            <p className="text-xs text-muted-foreground">
-                              {activity.date}
-                            </p>
-                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {activity.date}
+                        </p>
+                      </div>
                           <Button variant="ghost" size="sm" className="ml-auto">
                             View
                           </Button>
-                        </div>
-                      </div>
                     </div>
-                  ))}
+                  </div>
+                </div>
+              ))}
                   {displayActivities.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                       No recent activities
                     </div>
                   )}
-                </div>
-                <div className="mt-6">
-                  <Button variant="outline" className="w-full">
-                    View All Activities
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            </div>
+            <div className="mt-6">
+              <Button variant="outline" className="w-full">
+                View All Activities
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Upcoming Sessions */}
-          <Card>
-            <CardHeader>
+      {/* Upcoming Sessions */}
+      <Card>
+        <CardHeader>
               <CardTitle>Upcoming Sessions</CardTitle>
               <CardDescription>Your scheduled mentoring sessions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
                 {displaySessions.map((session) => renderSession(session))}
                 {displaySessions.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
@@ -939,9 +939,9 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
                 <Button variant="outline" className="w-full mt-4">
                   View All Sessions
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
+        </CardContent>
+      </Card>
         </TabsContent>
         
         <TabsContent value="projects" className="space-y-6">
@@ -1362,4 +1362,4 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
       <Toaster />
     </div>
   );
-}
+} 
