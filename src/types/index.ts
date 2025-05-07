@@ -1,5 +1,5 @@
 // User Roles
-export type UserRole = 'STUDENT' | 'MENTOR' | 'EMPLOYER' | 'ADMIN';
+export type UserRole = 'STUDENT' | 'MENTOR' | 'EMPLOYER';
 
 // User Type
 export interface User {
@@ -27,6 +27,17 @@ export interface Student {
   education?: string;
   skills?: string[];
   interests?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+// Employee Type
+export interface Employee {
+  id: string;
+  user_id: string;
+  skills?: string[];
+  experience?: string;
+  certifications?: string[];
   created_at: string;
   updated_at: string;
 }

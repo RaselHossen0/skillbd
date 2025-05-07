@@ -5,11 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -25,7 +21,7 @@ export default function DashboardLayout({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  
+
   // Role-specific navigation items
   const studentNavItems = [
     { name: "Overview", href: "/dashboard" },
@@ -36,46 +32,49 @@ export default function DashboardLayout({
     { name: "Portfolio", href: "/dashboard/portfolio" },
     { name: "Messages", href: "/dashboard/messages" },
   ];
-  
+
   const mentorNavItems = [
     { name: "Overview", href: "/dashboard" },
-    { name: "Sessions", href: "/dashboard/mentorship" },
-    { name: "My Courses", href: "/dashboard/courses" },
-    { name: "Reviews", href: "/dashboard/reviews" },
+    { name: "Expertise", href: "/dashboard/expertise" },
+    { name: "Sessions", href: "/dashboard/sessions" },
+    { name: "Students", href: "/dashboard/students" },
+    { name: "Projects", href: "/dashboard/projects" },
     { name: "Calendar", href: "/dashboard/calendar" },
     { name: "Messages", href: "/dashboard/messages" },
   ];
-  
+
   const employerNavItems = [
     { name: "Overview", href: "/dashboard" },
-    { name: "My Projects", href: "/dashboard/projects" },
-    { name: "Talent Pool", href: "/dashboard/talent" },
+    { name: "Jobs", href: "/dashboard/jobs" },
     { name: "Applications", href: "/dashboard/applications" },
+    { name: "Interviews", href: "/dashboard/interviews" },
+    { name: "Projects", href: "/dashboard/projects" },
+    { name: "Talent Pool", href: "/dashboard/talent" },
     { name: "Messages", href: "/dashboard/messages" },
   ];
-  
+
   // Select navigation items based on user role
   const getNavItems = () => {
     if (!user) return studentNavItems;
-    
+
     switch (user.role) {
-      case 'MENTOR':
+      case "MENTOR":
         return mentorNavItems;
-      case 'EMPLOYER':
+      case "EMPLOYER":
         return employerNavItems;
-      case 'STUDENT':
+      case "STUDENT":
       default:
         return studentNavItems;
     }
   };
-  
+
   const navItems = getNavItems();
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -139,10 +138,7 @@ export default function DashboardLayout({
                   </div>
                 </SheetContent>
               </Sheet>
-              <Link
-                href="/"
-                className="flex items-center gap-2 font-semibold"
-              >
+              <Link href="/" className="flex items-center gap-2 font-semibold">
                 <Image
                   src="/logo.svg"
                   alt="SkillBridge BD Logo"
@@ -250,4 +246,4 @@ export default function DashboardLayout({
       </div>
     </ProtectedRoute>
   );
-} 
+}
