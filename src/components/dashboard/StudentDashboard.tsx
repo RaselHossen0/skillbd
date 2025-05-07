@@ -77,13 +77,14 @@ interface StudentDashboardProps {
 }
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
-  const [stats, setStats] = useState<DashboardStats>({
-    skills_count: 0,
-    projects_count: 0,
-    courses_count: 0,
-    sessions_count: 0,
-    applications_count: 0
-  });
+
+  const stats = {
+    skills_count: 5,
+    projects_count: 3,
+    courses_count: 2,
+    sessions_count: 8,
+    applications_count: 12
+  };
   const [skills, setSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -118,7 +119,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         const sessionsData = await sessionsResponse.json();
         
         // Set initial data
-        setStats(statsData);
+        
         setActivities(activitiesData.activities || []);
         setSessions(sessionsData.sessions || []);
         
@@ -146,10 +147,18 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           setApplications(applicationsData.applications || []);
           
           // Update applications count in stats
-          setStats(prev => ({
-            ...prev,
-            applications_count: applicationsData.applications?.length || 0
-          }));
+      
+          
+          // Fetch available projects
+          try {
+            const projectsResponse = await fetch(`/api/dashboard/students/available-projects?studentId=${studentId}`);
+            if (projectsResponse.ok) {
+              const projectsData = await projectsResponse.json();
+              setAvailableProjects(projectsData.projects || []);
+            }
+          } catch (error) {
+            console.error('Error fetching available projects:', error);
+          }
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
