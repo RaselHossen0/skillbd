@@ -82,51 +82,6 @@ interface EmployerDashboardProps {
   user: User;
 }
 
-// Mock data for jobs
-const mockJobs = [
-  {
-    id: 1,
-    title: "Frontend Developer",
-    company_name: "SkillBD",
-    applications_count: 12,
-    deadline: "Dec 15, 2023",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    title: "Backend Engineer",
-    company_name: "SkillBD",
-    applications_count: 8,
-    deadline: "Dec 20, 2023",
-    status: "ACTIVE",
-  },
-];
-
-// Mock data for activities
-const mockActivities = [
-  {
-    id: 1,
-    type: "JOB_POSTED",
-    title: "Frontend Developer Position",
-    date: "2 days ago",
-    status: "ACTIVE",
-  },
-  {
-    id: 2,
-    type: "APPLICATION_RECEIVED",
-    title: "New application for Backend Engineer",
-    date: "5 days ago",
-    status: "PENDING",
-  },
-  {
-    id: 3,
-    type: "PROJECT_STARTED",
-    title: "E-commerce Website Development",
-    date: "1 week ago",
-    progress: 25,
-  },
-];
-
 export default function EmployerDashboard({ user }: EmployerDashboardProps) {
   const [stats, setStats] = useState<DashboardStats>({
     jobs_count: 0,
@@ -303,33 +258,6 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
       </div>
     );
   };
-
-  // Mock data for sessions
-  const mockSessions = [
-    {
-      id: 1,
-      title: "Interview for Frontend Developer",
-      applicant_name: "John Doe",
-      date: "Tomorrow",
-      time: "10:00 AM",
-      status: "SCHEDULED",
-      meeting_link: "https://zoom.us/j/123456789",
-    },
-    {
-      id: 2,
-      title: "Project Discussion",
-      applicant_name: "Jane Smith",
-      date: "Thursday",
-      time: "2:00 PM",
-      status: "SCHEDULED",
-      meeting_link: "https://zoom.us/j/987654321",
-    },
-  ];
-
-  // Use real data if available, otherwise fall back to mock data
-  const displayJobs = jobs.length > 0 ? jobs : mockJobs;
-  const displayActivities = activities.length > 0 ? activities : mockActivities;
-  const displaySessions = sessions.length > 0 ? sessions : mockSessions;
 
   if (loading) {
     return (
@@ -578,7 +506,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {displayJobs.map((job) => (
+              {jobs.map((job) => (
                 <div
                   key={job.id}
                   className="flex items-center justify-between border p-4 rounded-lg"
@@ -605,7 +533,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
                   </div>
                 </div>
               ))}
-              {displayJobs.length === 0 && (
+              {jobs.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   No jobs posted yet. Create your first job posting!
                 </div>
@@ -622,7 +550,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {displayActivities.map((activity) => (
+              {activities.map((activity) => (
                 <div
                   key={activity.id}
                   className="flex items-center p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
@@ -679,7 +607,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {displaySessions.map((session) => renderSession(session))}
+            {sessions.map((session) => renderSession(session))}
             <Button variant="outline" className="w-full mt-4">
               View All Sessions
             </Button>
