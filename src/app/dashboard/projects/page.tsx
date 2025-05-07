@@ -166,46 +166,242 @@ export default function ProjectsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mt-1.5">
           Manage and review student projects
         </p>
       </div>
 
-      <Tabs defaultValue="in-progress" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="in-progress">
+      <Tabs defaultValue="in-progress" className="space-y-8">
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="in-progress" className="flex-1 md:flex-none">
             In Progress ({inProgressProjects.length})
           </TabsTrigger>
-          <TabsTrigger value="review">
+          <TabsTrigger value="review" className="flex-1 md:flex-none">
             Review ({reviewProjects.length})
           </TabsTrigger>
-          <TabsTrigger value="completed">
+          <TabsTrigger value="completed" className="flex-1 md:flex-none">
             Completed ({completedProjects.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="in-progress" className="space-y-4">
+        <TabsContent value="in-progress" className="space-y-6">
           {inProgressProjects.length > 0 ? (
-            inProgressProjects.map((project) => renderProject(project))
+            inProgressProjects.map((project) => (
+              <Card key={project.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl">{project.title}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={project.student.avatar_url} />
+                            <AvatarFallback>
+                              {project.student.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{project.student.name}</span>
+                        </div>
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        project.status === "COMPLETED"
+                          ? "default"
+                          : project.status === "REVIEW"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className="w-fit"
+                    >
+                      {project.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Description</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {project.skills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="px-3 py-1"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium">Progress</h4>
+                        <span className="text-sm text-muted-foreground">
+                          {project.progress}%
+                        </span>
+                      </div>
+                      <Progress value={project.progress} className="h-2" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {project.due_date && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Due Date</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {project.due_date}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">
+                          Last Updated
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {project.last_updated}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" size="sm" className="px-4">
+                        View Details
+                      </Button>
+                      {project.status === "REVIEW" && (
+                        <Button size="sm" className="px-4">
+                          Review Project
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No projects in progress</p>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
+                  No projects in progress
+                </p>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        <TabsContent value="review" className="space-y-4">
+        <TabsContent value="review" className="space-y-6">
           {reviewProjects.length > 0 ? (
-            reviewProjects.map((project) => renderProject(project))
+            reviewProjects.map((project) => (
+              <Card key={project.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl">{project.title}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={project.student.avatar_url} />
+                            <AvatarFallback>
+                              {project.student.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{project.student.name}</span>
+                        </div>
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        project.status === "COMPLETED"
+                          ? "default"
+                          : project.status === "REVIEW"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className="w-fit"
+                    >
+                      {project.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Description</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {project.skills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="px-3 py-1"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium">Progress</h4>
+                        <span className="text-sm text-muted-foreground">
+                          {project.progress}%
+                        </span>
+                      </div>
+                      <Progress value={project.progress} className="h-2" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {project.due_date && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Due Date</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {project.due_date}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">
+                          Last Updated
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {project.last_updated}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" size="sm" className="px-4">
+                        View Details
+                      </Button>
+                      {project.status === "REVIEW" && (
+                        <Button size="sm" className="px-4">
+                          Review Project
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
                   No projects awaiting review
                 </p>
               </CardContent>
@@ -213,13 +409,112 @@ export default function ProjectsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-4">
+        <TabsContent value="completed" className="space-y-6">
           {completedProjects.length > 0 ? (
-            completedProjects.map((project) => renderProject(project))
+            completedProjects.map((project) => (
+              <Card key={project.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl">{project.title}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={project.student.avatar_url} />
+                            <AvatarFallback>
+                              {project.student.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{project.student.name}</span>
+                        </div>
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        project.status === "COMPLETED"
+                          ? "default"
+                          : project.status === "REVIEW"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className="w-fit"
+                    >
+                      {project.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Description</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {project.skills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="px-3 py-1"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium">Progress</h4>
+                        <span className="text-sm text-muted-foreground">
+                          {project.progress}%
+                        </span>
+                      </div>
+                      <Progress value={project.progress} className="h-2" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {project.due_date && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Due Date</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {project.due_date}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">
+                          Last Updated
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {project.last_updated}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" size="sm" className="px-4">
+                        View Details
+                      </Button>
+                      {project.status === "REVIEW" && (
+                        <Button size="sm" className="px-4">
+                          Review Project
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No completed projects</p>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
+                  No completed projects
+                </p>
               </CardContent>
             </Card>
           )}

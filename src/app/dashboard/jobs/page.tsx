@@ -129,17 +129,17 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Job Management</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mt-1.5">
             Create and manage your job postings
           </p>
         </div>
         <Dialog open={isCreatingJob} onOpenChange={setIsCreatingJob}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full md:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Create Job
             </Button>
@@ -151,7 +151,7 @@ export default function JobsPage() {
                 Fill in the details to create a new job posting
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-6 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">Job Title</Label>
                 <Input
@@ -178,6 +178,7 @@ export default function JobsPage() {
                     })
                   }
                   placeholder="Describe the role and responsibilities"
+                  className="min-h-[120px]"
                 />
               </div>
               <div className="grid gap-2">
@@ -192,9 +193,10 @@ export default function JobsPage() {
                     })
                   }
                   placeholder="List the required skills and qualifications"
+                  className="min-h-[120px]"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="location">Location</Label>
                   <Input
@@ -239,7 +241,7 @@ export default function JobsPage() {
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setIsCreatingJob(false)}>
                 Cancel
               </Button>
@@ -251,12 +253,14 @@ export default function JobsPage() {
 
       <div className="grid gap-6">
         {jobs.map((job) => (
-          <Card key={job.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <Card key={job.id} className="overflow-hidden">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <CardTitle>{job.title}</CardTitle>
-                  <CardDescription>{job.company_name}</CardDescription>
+                  <CardTitle className="text-xl">{job.title}</CardTitle>
+                  <CardDescription className="mt-1.5">
+                    {job.company_name}
+                  </CardDescription>
                 </div>
                 <Badge
                   variant={
@@ -266,24 +270,27 @@ export default function JobsPage() {
                       ? "secondary"
                       : "destructive"
                   }
+                  className="w-fit"
                 >
                   {job.status}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge variant="outline" className="px-3 py-1">
                     {job.applications_count} Applications
                   </Badge>
-                  <Badge variant="outline">Deadline: {job.deadline}</Badge>
+                  <Badge variant="outline" className="px-3 py-1">
+                    Deadline: {job.deadline}
+                  </Badge>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                <div className="flex gap-3">
+                  <Button variant="outline" size="sm" className="px-4">
                     View Applications
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="px-4">
                     Edit
                   </Button>
                 </div>
@@ -293,11 +300,11 @@ export default function JobsPage() {
         ))}
         {jobs.length === 0 && (
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <p className="text-muted-foreground mb-6 text-center">
                 No jobs posted yet. Create your first job posting!
               </p>
-              <Button onClick={() => setIsCreatingJob(true)}>
+              <Button onClick={() => setIsCreatingJob(true)} size="lg">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Job
               </Button>

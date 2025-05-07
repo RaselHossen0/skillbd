@@ -94,26 +94,28 @@ export default function ExpertisePage() {
 
   const renderExpertise = (item: Expertise) => {
     return (
-      <Card key={item.id}>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <Card key={item.id} className="overflow-hidden">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col gap-4">
             <div>
-              <CardTitle>{item.name}</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl">{item.name}</CardTitle>
+              <CardDescription className="mt-1.5">
                 <Badge variant="outline" className="mt-2">
                   {item.level}
                 </Badge>
               </CardDescription>
             </div>
-            <Badge variant="secondary">{item.students_count} Students</Badge>
+            <Badge variant="secondary" className="w-fit">
+              {item.students_count} Students
+            </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" size="sm">
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" size="sm" className="px-4">
               Edit
             </Button>
-            <Button variant="destructive" size="sm">
+            <Button variant="destructive" size="sm" className="px-4">
               Remove
             </Button>
           </div>
@@ -131,17 +133,17 @@ export default function ExpertisePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Expertise Areas</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mt-1.5">
             Manage your areas of expertise and skill levels
           </p>
         </div>
         <Dialog open={isAddingExpertise} onOpenChange={setIsAddingExpertise}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full md:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Add Expertise
             </Button>
@@ -153,7 +155,7 @@ export default function ExpertisePage() {
                 Add a new area of expertise and your skill level
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-6 py-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Expertise Area</Label>
                 <Input
@@ -185,7 +187,7 @@ export default function ExpertisePage() {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => setIsAddingExpertise(false)}
@@ -198,18 +200,46 @@ export default function ExpertisePage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {expertise.length > 0 ? (
-          expertise.map((item) => renderExpertise(item))
+          expertise.map((item) => (
+            <Card key={item.id} className="overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <CardTitle className="text-xl">{item.name}</CardTitle>
+                    <CardDescription className="mt-1.5">
+                      <Badge variant="outline" className="mt-2">
+                        {item.level}
+                      </Badge>
+                    </CardDescription>
+                  </div>
+                  <Badge variant="secondary" className="w-fit">
+                    {item.students_count} Students
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" size="sm" className="px-4">
+                    Edit
+                  </Button>
+                  <Button variant="destructive" size="sm" className="px-4">
+                    Remove
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
         ) : (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground">
+          <Card className="md:col-span-2 lg:col-span-3">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <p className="text-muted-foreground mb-6 text-center">
                 No expertise areas added yet
               </p>
               <Button
                 variant="outline"
-                className="mt-4"
+                size="lg"
                 onClick={() => setIsAddingExpertise(true)}
               >
                 Add Your First Expertise

@@ -148,31 +148,113 @@ export default function StudentsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Students</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mt-1.5">
           Manage your students and track their progress
         </p>
       </div>
 
-      <Tabs defaultValue="active" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="active">
+      <Tabs defaultValue="active" className="space-y-8">
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="active" className="flex-1 md:flex-none">
             Active ({activeStudents.length})
           </TabsTrigger>
-          <TabsTrigger value="inactive">
+          <TabsTrigger value="inactive" className="flex-1 md:flex-none">
             Inactive ({inactiveStudents.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="active" className="space-y-4">
+        <TabsContent value="active" className="space-y-6">
           {activeStudents.length > 0 ? (
-            activeStudents.map((student) => renderStudent(student))
+            activeStudents.map((student) => (
+              <Card key={student.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={student.avatar_url} />
+                      <AvatarFallback className="text-lg">
+                        {student.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <CardTitle className="text-xl">{student.name}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        {student.email}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        student.status === "ACTIVE" ? "default" : "secondary"
+                      }
+                      className="w-fit"
+                    >
+                      {student.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {student.skills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="px-3 py-1"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Sessions</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {student.progress.completed_sessions} /{" "}
+                          {student.progress.total_sessions} completed
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Projects</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {student.progress.completed_projects} /{" "}
+                          {student.progress.total_projects} completed
+                        </p>
+                      </div>
+                    </div>
+                    {student.last_session && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">
+                          Last Session
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {student.last_session}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" size="sm" className="px-4">
+                        View Profile
+                      </Button>
+                      <Button variant="outline" size="sm" className="px-4">
+                        Schedule Session
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
                   No active students found
                 </p>
               </CardContent>
@@ -180,13 +262,95 @@ export default function StudentsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="inactive" className="space-y-4">
+        <TabsContent value="inactive" className="space-y-6">
           {inactiveStudents.length > 0 ? (
-            inactiveStudents.map((student) => renderStudent(student))
+            inactiveStudents.map((student) => (
+              <Card key={student.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={student.avatar_url} />
+                      <AvatarFallback className="text-lg">
+                        {student.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <CardTitle className="text-xl">{student.name}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        {student.email}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        student.status === "ACTIVE" ? "default" : "secondary"
+                      }
+                      className="w-fit"
+                    >
+                      {student.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {student.skills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="px-3 py-1"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Sessions</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {student.progress.completed_sessions} /{" "}
+                          {student.progress.total_sessions} completed
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Projects</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {student.progress.completed_projects} /{" "}
+                          {student.progress.total_projects} completed
+                        </p>
+                      </div>
+                    </div>
+                    {student.last_session && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">
+                          Last Session
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {student.last_session}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" size="sm" className="px-4">
+                        View Profile
+                      </Button>
+                      <Button variant="outline" size="sm" className="px-4">
+                        Schedule Session
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
                   No inactive students found
                 </p>
               </CardContent>
