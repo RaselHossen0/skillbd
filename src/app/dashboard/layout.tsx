@@ -46,6 +46,7 @@ export default function DashboardLayout({
     { name: "Applications", href: "/dashboard/applications" },
     { name: "Interviews", href: "/dashboard/interviews" },
     { name: "Projects", href: "/dashboard/projects" },
+    { name: "Assessments", href: "/dashboard/assessments" },
   ];
 
   // Select navigation items based on user role
