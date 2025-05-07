@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,11 @@ interface Session {
   time: string;
   status: string;
   zoom_link?: string;
+  students?: {
+    users?: {
+      name: string;
+    };
+  };
 }
 
 interface Activity {
@@ -74,9 +80,15 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
         if (!activitiesResponse.ok) throw new Error('Failed to fetch activities');
         const activitiesData = await activitiesResponse.json();
         
+        // Fetch sessions
+        const sessionsResponse = await fetch(`/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`);
+        if (!sessionsResponse.ok) throw new Error('Failed to fetch sessions');
+        const sessionsData = await sessionsResponse.json();
+        
         // Set initial data
         setStats(statsData);
         setActivities(activitiesData.activities || []);
+        setSessions(sessionsData.sessions || []);
         
         // Fetch mentor-specific data if we have a mentor record
         if (user.mentors && user.mentors.length > 0) {
@@ -87,13 +99,7 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
           if (!expertiseResponse.ok) throw new Error('Failed to fetch expertise areas');
           const expertiseData = await expertiseResponse.json();
           
-          // Fetch upcoming sessions
-          const sessionsResponse = await fetch(`/api/dashboard/mentors/sessions?mentorId=${mentorId}`);
-          if (!sessionsResponse.ok) throw new Error('Failed to fetch sessions');
-          const sessionsData = await sessionsResponse.json();
-          
           setExpertise(expertiseData.expertise || []);
-          setSessions(sessionsData.sessions || []);
         }
       } catch (error) {
         console.error('Error fetching mentor dashboard data:', error);
@@ -146,26 +152,25 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
   
   // Render a session item
   const renderSession = (session: Session) => {
+    const studentName = session.students?.users?.name || session.student_name || "Student";
+    
     return (
       <div key={session.id} className="flex items-center justify-between border p-4 rounded-lg">
         <div>
           <h4 className="font-medium">{session.title}</h4>
-          <p className="text-sm text-muted-foreground">with {session.student_name}</p>
+          <p className="text-sm text-muted-foreground">with {studentName}</p>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline">{session.date}</Badge>
             <Badge variant="outline">{session.time}</Badge>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          as="a" 
-          href={session.zoom_link} 
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Join Zoom
-        </Button>
+        {session.zoom_link && (
+          <Link href={session.zoom_link} target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" size="sm">
+              Join Zoom
+            </Button>
+          </Link>
+        )}
       </div>
     );
   };

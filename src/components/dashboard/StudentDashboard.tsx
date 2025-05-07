@@ -6,6 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/use-toast";
+import { createSession, deleteSession, fetchAvailableMentors, updateSession } from "@/lib/session-service";
+import { PlusCircle, Trash, Edit, MoreVertical } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Toaster } from "@/components/ui/toaster";
 
 interface DashboardStats {
   skills_count: number;
@@ -58,7 +73,14 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mentors, setMentors] = useState<any[]>([]);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [isEditingSession, setIsEditingSession] = useState(false);
+  const [currentSession, setCurrentSession] = useState<any>(null);
+  const [isDeletingSession, setIsDeletingSession] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -75,9 +97,15 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         if (!activitiesResponse.ok) throw new Error('Failed to fetch activities');
         const activitiesData = await activitiesResponse.json();
         
+        // Fetch sessions
+        const sessionsResponse = await fetch(`/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`);
+        if (!sessionsResponse.ok) throw new Error('Failed to fetch sessions');
+        const sessionsData = await sessionsResponse.json();
+        
         // Set initial data
         setStats(statsData);
         setActivities(activitiesData.activities || []);
+        setSessions(sessionsData.sessions || []);
         
         // Fetch student-specific data if we have a student record
         if (user.students && user.students.length > 0) {
@@ -106,6 +134,106 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     fetchData();
   }, [user]);
   
+  useEffect(() => {
+    async function fetchMentors() {
+      try {
+        const mentorsData = await fetchAvailableMentors();
+        setMentors(mentorsData);
+      } catch (error) {
+        console.error('Error fetching mentors:', error);
+      }
+    }
+    
+    fetchMentors();
+  }, []);
+
+  // Function to handle session creation
+  const handleCreateSession = async (sessionData: any) => {
+    try {
+      const newSession = await createSession('STUDENT', sessionData);
+      
+      // Add the new session to the list
+      setSessions(prev => [newSession, ...prev]);
+      
+      toast({
+        title: "Session scheduled",
+        description: "Your mentorship session has been scheduled successfully.",
+      });
+    } catch (error) {
+      console.error('Error creating session:', error);
+      toast({
+        title: "Failed to schedule session",
+        description: "There was a problem scheduling your session. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle session update
+  const handleUpdateSession = async (sessionData: any) => {
+    if (!currentSession) return;
+    
+    try {
+      const updatedSession = await updateSession('STUDENT', currentSession.id, sessionData);
+      
+      // Update the session in the list
+      setSessions(prev => prev.map(session => 
+        session.id === updatedSession.id ? updatedSession : session
+      ));
+      
+      toast({
+        title: "Session updated",
+        description: "Your mentorship session has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating session:', error);
+      toast({
+        title: "Failed to update session",
+        description: "There was a problem updating your session. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle session deletion
+  const handleDeleteSession = async () => {
+    if (!sessionToDelete) return;
+    
+    try {
+      await deleteSession('STUDENT', sessionToDelete);
+      
+      // Remove the session from the list
+      setSessions(prev => prev.filter(session => session.id !== sessionToDelete));
+      
+      toast({
+        title: "Session cancelled",
+        description: "Your mentorship session has been cancelled successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      toast({
+        title: "Failed to cancel session",
+        description: "There was a problem cancelling your session. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingSession(false);
+      setSessionToDelete(null);
+    }
+  };
+
+  // Open the edit session dialog
+  const openEditSessionDialog = (session: any) => {
+    setCurrentSession(session);
+    setIsEditingSession(true);
+  };
+
+  // Confirm session deletion
+  const confirmDeleteSession = (sessionId: string) => {
+    setSessionToDelete(sessionId);
+    setIsDeletingSession(true);
+  };
+
   // Render a skill item
   const renderSkill = (skill: Skill, index: number) => {
     const skillName = skill.skill?.name || `Skill ${index + 1}`;
@@ -187,14 +315,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     );
   };
   
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
   // Mock data for fallback when API data is not available
   const mockSkills = [
     { id: '1', skill: { id: '1', name: 'JavaScript', category: 'Programming' }, level: 4, verified: true },
@@ -262,10 +382,119 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     },
   ];
   
+  const mockSessions = [
+    {
+      id: 1,
+      title: "Career Guidance Session",
+      mentor_name: "John Doe",
+      date: "Tomorrow",
+      time: "10:00 AM",
+      status: "SCHEDULED",
+      zoom_link: "https://zoom.us/j/123456789"
+    },
+    {
+      id: 2,
+      title: "React Project Review",
+      mentor_name: "Jane Smith",
+      date: "Thursday",
+      time: "2:00 PM",
+      status: "SCHEDULED",
+      zoom_link: "https://zoom.us/j/987654321"
+    },
+    {
+      id: 3,
+      title: "Interview Preparation",
+      mentor_name: "Alex Johnson",
+      date: "Friday",
+      time: "11:30 AM",
+      status: "SCHEDULED",
+      zoom_link: "https://zoom.us/j/567891234"
+    }
+  ];
+
   // Use real data if available, otherwise fall back to mock data
   const displaySkills = skills.length > 0 ? skills : mockSkills;
   const displayProjects = projects.length > 0 ? projects : mockProjects;
   const displayActivities = activities.length > 0 ? activities : mockActivities;
+  const displaySessions = sessions.length > 0 ? sessions : mockSessions;
+
+  // Render a session item with actions
+  const renderSessionWithActions = (session: any) => {
+    const mentorName = session.mentors?.users?.name || "Your Mentor";
+    
+    return (
+      <div key={session.id} className="flex items-center justify-between border p-4 rounded-lg">
+        <div>
+          <h4 className="font-medium">{session.title}</h4>
+          <p className="text-sm text-muted-foreground">with {mentorName}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline">{session.date}</Badge>
+            <Badge variant="outline">{session.time}</Badge>
+            <Badge
+              variant={
+                session.status === "CONFIRMED" 
+                  ? "success" 
+                  : session.status === "PENDING" 
+                  ? "secondary"
+                  : session.status === "COMPLETED"
+                  ? "default"
+                  : "destructive"
+              }
+            >
+              {session.status}
+            </Badge>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {session.zoom_link && (
+            <Link href={session.zoom_link} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm">
+                Join Zoom
+              </Button>
+            </Link>
+          )}
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2">
+              <div className="flex flex-col space-y-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start"
+                  onClick={() => openEditSessionDialog(session)}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="justify-start text-destructive hover:text-destructive"
+                  onClick={() => confirmDeleteSession(session.id)}
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -447,6 +676,30 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </Card>
       </div>
 
+      {/* Upcoming Sessions */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Upcoming Mentorship Sessions</CardTitle>
+            <CardDescription>Your scheduled mentoring appointments</CardDescription>
+          </div>
+          <Button onClick={() => setIsCreatingSession(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Book Session
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {displaySessions.map(session => renderSessionWithActions(session))}
+            {displaySessions.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground">
+                No upcoming sessions. Book a session with a mentor to get started.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recommended Projects */}
       <Card className="overflow-hidden">
         <CardHeader>
@@ -459,6 +712,100 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Session Dialog for Create/Edit */}
+      {isCreatingSession && (
+        <div>
+          {/* Import and use custom SessionDialog component */}
+          {/* For now, let's simulate a simple dialog */}
+          <AlertDialog open={isCreatingSession} onOpenChange={setIsCreatingSession}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Book a Session</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This is a placeholder. The actual form would go here.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    // Simulate creating a session
+                    const mockSession = {
+                      id: Date.now().toString(),
+                      title: "Mock Mentorship Session",
+                      date: new Date().toISOString().split("T")[0],
+                      time: "10:00",
+                      status: "PENDING",
+                      mentor_id: mentors[0]?.id || "mock-mentor-id",
+                      student_id: user.id
+                    };
+                    handleCreateSession(mockSession);
+                    setIsCreatingSession(false);
+                  }}
+                >
+                  Book Session
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+
+      {/* Edit Session Dialog */}
+      {isEditingSession && currentSession && (
+        <div>
+          <AlertDialog open={isEditingSession} onOpenChange={setIsEditingSession}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Edit Session</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This is a placeholder. The actual form would go here.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    // Simulate updating a session
+                    const updatedSession = {
+                      ...currentSession,
+                      status: currentSession.status === "PENDING" ? "CONFIRMED" : "PENDING"
+                    };
+                    handleUpdateSession(updatedSession);
+                    setIsEditingSession(false);
+                  }}
+                >
+                  Update Session
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeletingSession} onOpenChange={setIsDeletingSession}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this session? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Session</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSession}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, Cancel Session
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <Toaster />
     </div>
   );
 } 
