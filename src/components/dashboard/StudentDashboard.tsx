@@ -92,11 +92,11 @@ interface StudentDashboardProps {
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [stats, setStats] = useState<DashboardStats>({
-    skills_count: 0,
-    projects_count: 0,
-    courses_count: 0,
-    sessions_count: 0,
-    applications_count: 0
+    skills_count: 5,
+    projects_count: 3,
+    courses_count: 2,
+    sessions_count: 8,
+    applications_count: 12
   });
   const [skills, setSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);

@@ -309,13 +309,18 @@ export default function ProjectsPage() {
       alert("Application submitted successfully!");
     } catch (error) {
       console.error("Error applying to project:", error);
-      alert(error instanceof Error ? error.message : "Failed to apply to project");
+      alert(
+        error instanceof Error ? error.message : "Failed to apply to project"
+      );
     }
   };
 
   const renderProject = (project: Project) => {
     return (
-      <Card key={project.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
+      <Card
+        key={project.id}
+        className="flex flex-col hover:shadow-lg transition-shadow duration-300"
+      >
         <CardHeader className="pb-4 bg-gray-50/50">
           <div className="flex items-center justify-between">
             <div>
@@ -326,12 +331,14 @@ export default function ProjectsPage() {
                 {project.company_name || "SkillBridge Project"}
               </CardDescription>
             </div>
-            <Badge 
+            <Badge
               variant={
-                project.status === "COMPLETED" ? "default" 
-                : project.status === "IN_PROGRESS" ? "secondary"
-                : "outline"
-              } 
+                project.status === "COMPLETED"
+                  ? "default"
+                  : project.status === "IN_PROGRESS"
+                  ? "secondary"
+                  : "outline"
+              }
               className="uppercase tracking-wider"
             >
               {project.status.replace("_", " ")}
@@ -342,11 +349,15 @@ export default function ProjectsPage() {
           <div className="text-sm text-gray-700 line-clamp-3">
             {project.description}
           </div>
-          
+
           {project.skills && project.skills.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {project.skills.slice(0, 3).map((skill, index) => (
-                <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="bg-blue-50 text-blue-700"
+                >
                   {skill}
                 </Badge>
               ))}
@@ -357,7 +368,7 @@ export default function ProjectsPage() {
               )}
             </div>
           )}
-          
+
           <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
             {project.budget && (
               <div className="flex items-center gap-2">
@@ -378,10 +389,10 @@ export default function ProjectsPage() {
             <Button variant="outline" size="sm">
               View Details
             </Button>
-            
+
             {user?.role === "STUDENT" && project.type === "AVAILABLE" && (
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 onClick={() => {
                   setSelectedProject(project);
                   setApplicationData({ cover_letter: "" });
@@ -1070,8 +1081,8 @@ export default function ProjectsPage() {
       )}
 
       {selectedProject && (
-        <Dialog 
-          open={!!selectedProject} 
+        <Dialog
+          open={!!selectedProject}
           onOpenChange={() => setSelectedProject(null)}
         >
           <DialogContent className="sm:max-w-[500px]">
@@ -1081,7 +1092,7 @@ export default function ProjectsPage() {
                 Submit your application for this project
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="cover_letter">Cover Letter</Label>
@@ -1089,25 +1100,25 @@ export default function ProjectsPage() {
                   id="cover_letter"
                   placeholder="Why are you a great fit for this project? (Optional)"
                   value={applicationData.cover_letter}
-                  onChange={(e) => 
+                  onChange={(e) =>
                     setApplicationData({
-                      ...applicationData, 
-                      cover_letter: e.target.value 
+                      ...applicationData,
+                      cover_letter: e.target.value,
                     })
                   }
                   rows={5}
                 />
               </div>
             </div>
-            
+
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setSelectedProject(null)}
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={() => handleApplyToProject(selectedProject)}
                 disabled={!selectedProject}
               >
