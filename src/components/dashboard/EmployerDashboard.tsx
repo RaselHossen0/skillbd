@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
+import { Plus, Briefcase, Users, Award, Clock, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+
+// Import new common components
+import { DashboardHeader } from "./common/DashboardHeader";
+import { StatsCard } from "./common/StatsCard";
 
 interface DashboardStats {
   jobs_count: number;
@@ -123,33 +127,6 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
       try {
         setLoading(true);
 
-        // Fetch stats
-        const statsResponse = await fetch(
-          `/api/dashboard/stats?userId=${user.id}&userRole=${user.role}`
-        );
-        if (!statsResponse.ok) throw new Error("Failed to fetch stats");
-        const statsData = await statsResponse.json();
-
-        // Fetch activities
-        const activitiesResponse = await fetch(
-          `/api/dashboard/activities?userId=${user.id}`
-        );
-        if (!activitiesResponse.ok)
-          throw new Error("Failed to fetch activities");
-        const activitiesData = await activitiesResponse.json();
-
-        // Fetch sessions
-        const sessionsResponse = await fetch(
-          `/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`
-        );
-        if (!sessionsResponse.ok) throw new Error("Failed to fetch sessions");
-        const sessionsData = await sessionsResponse.json();
-
-        // Set initial data
-        
-        setActivities(activitiesData.activities || []);
-        setSessions(sessionsData.sessions || []);
-
         // Fetch employer-specific data
         if (
           user.role === "EMPLOYER" &&
@@ -157,6 +134,47 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
           user.employers.length > 0
         ) {
           const employerId = user.employers[0].id;
+
+          // Fetch jobs stats
+          const jobsStatsResponse = await fetch(
+            `/api/dashboard/employers/jobs/stats?employerId=${employerId}`
+          );
+          if (!jobsStatsResponse.ok) throw new Error("Failed to fetch jobs stats");
+          const jobsStatsData = await jobsStatsResponse.json();
+
+          // Fetch projects stats
+          const projectsStatsResponse = await fetch(
+            `/api/dashboard/employers/projects/stats?employerId=${employerId}`
+          );
+          if (!projectsStatsResponse.ok) throw new Error("Failed to fetch projects stats");
+          const projectsStatsData = await projectsStatsResponse.json();
+
+          // Update stats with fetched data
+          setStats({
+            jobs_count: jobsStatsData.total_jobs || 0,
+            applications_count: jobsStatsData.total_applications || 0,
+            projects_count: projectsStatsData.total_projects || 0,
+            active_contracts: projectsStatsData.active_contracts || 0,
+          });
+
+          // Fetch activities
+          const activitiesResponse = await fetch(
+            `/api/dashboard/activities?userId=${user.id}`
+          );
+          if (!activitiesResponse.ok)
+            throw new Error("Failed to fetch activities");
+          const activitiesData = await activitiesResponse.json();
+
+          // Fetch sessions
+          const sessionsResponse = await fetch(
+            `/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`
+          );
+          if (!sessionsResponse.ok) throw new Error("Failed to fetch sessions");
+          const sessionsData = await sessionsResponse.json();
+
+          // Set initial data
+          setActivities(activitiesData.activities || []);
+          setSessions(sessionsData.sessions || []);
 
           // Fetch jobs
           const jobsResponse = await fetch(
@@ -293,119 +311,52 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Employer Dashboard
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Welcome back, {user.name}! Here's an overview of your company's
-            activities.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline">View Analytics</Button>
-          <Button>Post New Job</Button>
-        </div>
-      </div>
+      {/* Dashboard Header */}
+      <DashboardHeader 
+        user={user} 
+        title="Employer Dashboard" 
+        description={`Welcome back, ${user.name}! Here's an overview of your company's activities.`}
+        actions={
+          <>
+            <Button variant="outline">View Analytics</Button>
+            <Button>Post New Job</Button>
+          </>
+        }
+      />
 
       {/* Stats Overview */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.jobs_count}</div>
-            <p className="text-xs text-muted-foreground">Active job postings</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Applications</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.applications_count}</div>
-            <p className="text-xs text-muted-foreground">
-              Total applications received
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Projects
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.projects_count}</div>
-            <p className="text-xs text-muted-foreground">Ongoing projects</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Contracts
-            </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active_contracts}</div>
-            <p className="text-xs text-muted-foreground">Current contracts</p>
-          </CardContent>
-        </Card>
+        <StatsCard 
+          title="Total Jobs" 
+          value={stats.jobs_count} 
+          description="Active job postings"
+          icon={<Briefcase />}
+          trend={{ value: 15, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Applications" 
+          value={stats.applications_count} 
+          description="Total applications received"
+          icon={<Users />}
+          trend={{ value: 20, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Active Projects" 
+          value={stats.projects_count} 
+          description="Ongoing projects"
+          icon={<FileText />}
+          trend={{ value: 10, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Active Contracts" 
+          value={stats.active_contracts} 
+          description="Current contracts"
+          icon={<Award />}
+          trend={{ value: 25, direction: 'up' }}
+        />
       </div>
 
+      {/* Activities and Insights Section */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         {/* Job Management */}
         <Card className="md:col-span-2 lg:col-span-4">
@@ -566,59 +517,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Recent Activities */}
-        <Card className="md:col-span-2 lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-            <CardDescription>Your latest interactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {activities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="space-y-1 w-full">
-                    <p className="text-sm font-medium leading-none">
-                      {activity.title}
-                    </p>
-                    <div className="flex items-center pt-2 justify-between">
-                      <div className="flex items-center gap-2">
-                        {activity.type === "JOB_POSTED" && (
-                          <Badge className="bg-green-500 hover:bg-green-600">
-                            Posted
-                          </Badge>
-                        )}
-                        {activity.type === "APPLICATION_RECEIVED" && (
-                          <Badge className="bg-blue-500 hover:bg-blue-600">
-                            New Application
-                          </Badge>
-                        )}
-                        {activity.type === "PROJECT_STARTED" && (
-                          <Badge className="bg-purple-500 hover:bg-purple-600">
-                            Project
-                          </Badge>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {activity.date}
-                        </p>
-                      </div>
-                      <Button variant="ghost" size="sm" className="ml-auto">
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6">
-              <Button variant="outline" className="w-full">
-                View All Activities
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Interview Sessions */}

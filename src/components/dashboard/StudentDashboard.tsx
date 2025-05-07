@@ -18,9 +18,23 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/components/ui/use-toast";
 import { createSession, deleteSession, fetchAvailableMentors, updateSession } from "@/lib/session-service";
-import { PlusCircle, Trash, Edit, MoreVertical } from "lucide-react";
+import {
+  PlusCircle,
+  Trash,
+  Edit,
+  MoreVertical,
+  BookOpen,
+  Briefcase,
+  Users,
+  Award,
+  Clock,
+} from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Toaster } from "@/components/ui/toaster";
+
+// Import new common components
+import { DashboardHeader } from "./common/DashboardHeader";
+import { StatsCard } from "./common/StatsCard";
 
 interface DashboardStats {
   skills_count: number;
@@ -77,14 +91,13 @@ interface StudentDashboardProps {
 }
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
-
-  const stats = {
-    skills_count: 5,
-    projects_count: 3,
-    courses_count: 2,
-    sessions_count: 8,
-    applications_count: 12
-  };
+  const [stats, setStats] = useState<DashboardStats>({
+    skills_count: 0,
+    projects_count: 0,
+    courses_count: 0,
+    sessions_count: 0,
+    applications_count: 0
+  });
   const [skills, setSkills] = useState<Skill[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -97,76 +110,116 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [isDeletingSession, setIsDeletingSession] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-        
-        // Fetch stats
-        const statsResponse = await fetch(`/api/dashboard/stats?userId=${user.id}&userRole=${user.role}`);
-        if (!statsResponse.ok) throw new Error('Failed to fetch stats');
-        const statsData = await statsResponse.json();
-        
-        // Fetch activities
-        const activitiesResponse = await fetch(`/api/dashboard/activities?userId=${user.id}`);
-        if (!activitiesResponse.ok) throw new Error('Failed to fetch activities');
-        const activitiesData = await activitiesResponse.json();
-        
-        // Fetch sessions
-        const sessionsResponse = await fetch(`/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`);
-        if (!sessionsResponse.ok) throw new Error('Failed to fetch sessions');
-        const sessionsData = await sessionsResponse.json();
-        
-        // Set initial data
-        
-        setActivities(activitiesData.activities || []);
-        setSessions(sessionsData.sessions || []);
-        
-        // Fetch student-specific data if we have a student record
-        if (user.students && user.students.length > 0) {
+
+        // Fetch student-specific data
+        if (
+          user.role === "STUDENT" &&
+          user.students &&
+          user.students.length > 0
+        ) {
           const studentId = user.students[0].id;
-          
+
+          // Fetch projects stats
+          const projectsStatsResponse = await fetch(
+            `/api/dashboard/projects/stats?studentId=${studentId}`
+          );
+          if (!projectsStatsResponse.ok) throw new Error("Failed to fetch projects stats");
+          const projectsStatsData = await projectsStatsResponse.json();
+
+          // Fetch skills stats
+          const skillsStatsResponse = await fetch(
+            `/api/dashboard/skills/stats?studentId=${studentId}`
+          );
+          if (!skillsStatsResponse.ok) throw new Error("Failed to fetch skills stats");
+          const skillsStatsData = await skillsStatsResponse.json();
+
+          // Fetch mentorship stats
+          const mentorshipStatsResponse = await fetch(
+            `/api/dashboard/mentorship/stats?studentId=${studentId}`
+          );
+          if (!mentorshipStatsResponse.ok) throw new Error("Failed to fetch mentorship stats");
+          const mentorshipStatsData = await mentorshipStatsResponse.json();
+
+          // Fetch job applications stats
+          const applicationsStatsResponse = await fetch(
+            `/api/jobs/applications/stats?studentId=${studentId}`
+          );
+          if (!applicationsStatsResponse.ok) throw new Error("Failed to fetch job applications stats");
+          const applicationsStatsData = await applicationsStatsResponse.json();
+
+          // Update stats with fetched data
+          setStats({
+            skills_count: skillsStatsData.total_skills || 0,
+            projects_count: projectsStatsData.total_projects || 0,
+            courses_count: skillsStatsData.total_courses || 0,
+            sessions_count: mentorshipStatsData.total_sessions || 0,
+            applications_count: applicationsStatsData.total_applications || 0,
+          });
+
+          // Fetch available projects
+          const availableProjectsResponse = await fetch(
+            `/api/dashboard/students/available-projects?studentId=${studentId}`
+          );
+          if (!availableProjectsResponse.ok) throw new Error("Failed to fetch available projects");
+          const availableProjectsData = await availableProjectsResponse.json();
+          setAvailableProjects(availableProjectsData.projects || []);
+
+          // Fetch activities
+          const activitiesResponse = await fetch(
+            `/api/dashboard/activities?userId=${user.id}`
+          );
+          if (!activitiesResponse.ok)
+            throw new Error("Failed to fetch activities");
+          const activitiesData = await activitiesResponse.json();
+
+          // Fetch sessions
+          const sessionsResponse = await fetch(
+            `/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`
+          );
+          if (!sessionsResponse.ok) throw new Error("Failed to fetch sessions");
+          const sessionsData = await sessionsResponse.json();
+
           // Fetch skills
-          const skillsResponse = await fetch(`/api/dashboard/skills?studentId=${studentId}`);
-          if (!skillsResponse.ok) throw new Error('Failed to fetch skills');
+          const skillsResponse = await fetch(
+            `/api/dashboard/skills?studentId=${studentId}`
+          );
+          if (!skillsResponse.ok) throw new Error("Failed to fetch skills");
           const skillsData = await skillsResponse.json();
-          
+
           // Fetch projects
-          const projectsResponse = await fetch(`/api/dashboard/projects?userId=${user.id}&userRole=${user.role}`);
-          if (!projectsResponse.ok) throw new Error('Failed to fetch projects');
+          const projectsResponse = await fetch(
+            `/api/dashboard/projects?studentId=${studentId}`
+          );
+          if (!projectsResponse.ok) throw new Error("Failed to fetch projects");
           const projectsData = await projectsResponse.json();
-          
+
           // Fetch job applications
-          const applicationsResponse = await fetch(`/api/jobs/applications?studentId=${studentId}`);
-          if (!applicationsResponse.ok) throw new Error('Failed to fetch job applications');
+          const applicationsResponse = await fetch(
+            `/api/jobs/applications?studentId=${studentId}`
+          );
+          if (!applicationsResponse.ok) throw new Error("Failed to fetch job applications");
           const applicationsData = await applicationsResponse.json();
-          
+
+          // Set initial data
+          setActivities(activitiesData.activities || []);
+          setSessions(sessionsData.sessions || []);
           setSkills(skillsData.skills || []);
           setProjects(projectsData.projects || []);
           setApplications(applicationsData.applications || []);
-          
-          // Update applications count in stats
-      
-          
-          // Fetch available projects
-          try {
-            const projectsResponse = await fetch(`/api/dashboard/students/available-projects?studentId=${studentId}`);
-            if (projectsResponse.ok) {
-              const projectsData = await projectsResponse.json();
-              setAvailableProjects(projectsData.projects || []);
-            }
-          } catch (error) {
-            console.error('Error fetching available projects:', error);
-          }
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
     }
-    
+
     fetchData();
   }, [user]);
   
@@ -351,10 +404,44 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     );
   };
 
+  // Generate mock sessions when no real sessions exist
+  const generateMockSessions = () => {
+    return [
+      {
+        id: 'mock-1',
+        title: 'Web Development Fundamentals',
+        mentor: { 
+          name: 'Sarah Johnson', 
+          avatar_url: '/avatars/mentor1.jpg' 
+        },
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+        time: '14:00',
+        status: 'PENDING',
+        zoom_link: 'https://zoom.us/j/mockmeeting1'
+      },
+      {
+        id: 'mock-2',
+        title: 'React.js Advanced Techniques',
+        mentor: { 
+          name: 'Michael Chen', 
+          avatar_url: '/avatars/mentor2.jpg' 
+        },
+        date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 weeks from now
+        time: '16:30',
+        status: 'PENDING',
+        zoom_link: 'https://zoom.us/j/mockmeeting2'
+      }
+    ];
+  };
+
+  // Modify the sessions rendering to use mock data if no real sessions
+  const displaySessions = sessions.length > 0 ? sessions : generateMockSessions();
+
   // Render a session item with actions
   const renderSessionWithActions = (session: any) => {
     // The enhanced API now returns mentor data in a more standardized format
-    const mentorName = session.mentor?.name || "Your Mentor";
+    const mentorName = session.mentor?.name || session.applicant?.name || "Your Mentor";
+    const isMockSession = session.id.startsWith('mock-');
     
     return (
       <div key={session.id} className="flex items-center justify-between border p-4 rounded-lg">
@@ -388,35 +475,37 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             </Link>
           )}
           
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-40 p-2">
-              <div className="flex flex-col space-y-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="justify-start"
-                  onClick={() => openEditSessionDialog(session)}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
+          {!isMockSession && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="justify-start text-destructive hover:text-destructive"
-                  onClick={() => confirmDeleteSession(session.id)}
-                >
-                  <Trash className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverTrigger>
+              <PopoverContent className="w-40 p-2">
+                <div className="flex flex-col space-y-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => openEditSessionDialog(session)}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="justify-start text-destructive hover:text-destructive"
+                    onClick={() => confirmDeleteSession(session.id)}
+                  >
+                    <Trash className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
     );
@@ -441,150 +530,61 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Student Dashboard</h2>
-          <p className="text-muted-foreground mt-1">
-            Welcome back, {user.name}! Here's an overview of your progress.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline">Download CV</Button>
-         
-         
-        </div>
-      </div>
+      {/* Dashboard Header */}
+      <DashboardHeader 
+        user={user} 
+        title="Student Dashboard" 
+        description={`Welcome back, ${user.name}! Here's an overview of your progress.`}
+        actions={
+          <>
+            <Button variant="outline">Download CV</Button>
+            <Button>Find Opportunities</Button>
+          </>
+        }
+      />
 
       {/* Stats Overview */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Skills Assessed</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.skills_count}</div>
-            <p className="text-xs text-muted-foreground">
-              +2 skills since last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projects Completed</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.projects_count}</div>
-            <p className="text-xs text-muted-foreground">
-              +1 completed this month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Courses Enrolled</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M2 10h20" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.courses_count}</div>
-            <p className="text-xs text-muted-foreground">
-              1 course in progress
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mentorship Sessions</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.sessions_count}</div>
-            <p className="text-xs text-muted-foreground">
-              Next session tomorrow
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Job Applications</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-              <line x1="12" y1="22.08" x2="12" y2="12" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.applications_count || applications.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {applications.filter(app => app.status === "PENDING").length} pending applications
-            </p>
-          </CardContent>
-        </Card>
+        <StatsCard 
+          title="Skills Assessed" 
+          value={stats.skills_count} 
+          description="Skills developed"
+          icon={<BookOpen />}
+          trend={{ value: 20, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Projects Completed" 
+          value={stats.projects_count} 
+          description="Active projects"
+          icon={<Briefcase />}
+          trend={{ value: 15, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Courses Enrolled" 
+          value={stats.courses_count} 
+          description="Learning progress"
+          icon={<Users />}
+          trend={{ value: 10, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Mentorship Sessions" 
+          value={stats.sessions_count} 
+          description="Total sessions"
+          icon={<Award />}
+          trend={{ value: 25, direction: 'up' }}
+        />
+        <StatsCard 
+          title="Job Applications" 
+          value={stats.applications_count} 
+          description="Total applications"
+          icon={<Clock />}
+          trend={{ value: 30, direction: 'up' }}
+        />
       </div>
 
+      {/* Activities and Insights Section */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        {/* Top Skills */}
+        {/* Top Skills Card */}
         <Card className="md:col-span-2 lg:col-span-3">
           <CardHeader>
             <CardTitle>Top Skills</CardTitle>
@@ -599,51 +599,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Recent Activities */}
-        <Card className="md:col-span-2 lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-            <CardDescription>Your latest interactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {activities.map((activity) => (
-                <div key={activity.id} className="flex items-center p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
-                  <div className="space-y-1 w-full">
-                    <p className="text-sm font-medium leading-none">
-                      {activity.title}
-                    </p>
-                    <div className="flex items-center pt-2 justify-between">
-                      <div className="flex items-center gap-2">
-                        {activity.type === "PROJECT_SUBMISSION" && (
-                          <Badge className="bg-green-500 hover:bg-green-600">Completed</Badge>
-                        )}
-                        {activity.type === "PROJECT_APPLICATION" && (
-                          <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>
-                        )}
-                        {activity.type === "MENTORSHIP_SESSION" && (
-                          <Badge className="bg-blue-500 hover:bg-blue-600">Session</Badge>
-                        )}
-                        {activity.type === "COURSE_PROGRESS" && (
-                          <Badge className="bg-purple-500 hover:bg-purple-600">Course</Badge>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {activity.date}
-                        </p>
-                      </div>
-                      <Button variant="ghost" size="sm" className="ml-auto">View</Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6">
-              <Button variant="outline" className="w-full">
-                View All Activities
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Upcoming Sessions */}
@@ -660,13 +616,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {sessions.length > 0 ? (
-              sessions.map((session) => renderSessionWithActions(session))
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">No upcoming sessions. Book one now!</p>
-              </div>
-            )}
+            {displaySessions.map((session) => renderSessionWithActions(session))}
           </div>
         </CardContent>
       </Card>
