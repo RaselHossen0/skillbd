@@ -37,6 +37,28 @@ interface Expertise {
   students_count: number;
 }
 
+// Mock expertise data
+const mockExpertise: Expertise[] = [
+  {
+    id: 1,
+    name: "Web Development",
+    level: "EXPERT",
+    students_count: 12,
+  },
+  {
+    id: 2,
+    name: "Mobile App Development",
+    level: "ADVANCED",
+    students_count: 8,
+  },
+  {
+    id: 3,
+    name: "Data Science",
+    level: "INTERMEDIATE",
+    students_count: 5,
+  },
+];
+
 export default function ExpertisePage() {
   const { user } = useAuth();
   const [expertise, setExpertise] = useState<Expertise[]>([]);
@@ -51,12 +73,8 @@ export default function ExpertisePage() {
     async function fetchExpertise() {
       try {
         if (user?.role === "MENTOR") {
-          const response = await fetch(
-            `/api/dashboard/expertise?userId=${user.id}`
-          );
-          if (!response.ok) throw new Error("Failed to fetch expertise");
-          const data = await response.json();
-          setExpertise(data.expertise || []);
+          // Use mock data instead of fetching
+          setExpertise(mockExpertise);
         }
       } catch (error) {
         console.error("Error fetching expertise:", error);
@@ -70,23 +88,20 @@ export default function ExpertisePage() {
 
   const handleAddExpertise = async () => {
     try {
-      const response = await fetch("/api/dashboard/expertise", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...newExpertise,
-          userId: user?.id,
-        }),
-      });
+      // Create new expertise object
+      const newExpertiseItem: Expertise = {
+        id: expertise.length + 1, // Simple ID generation
+        name: newExpertise.name,
+        level: newExpertise.level,
+        students_count: 0, // New expertise starts with 0 students
+      };
 
-      if (!response.ok) throw new Error("Failed to add expertise");
+      // Add to existing list
+      setExpertise([...expertise, newExpertiseItem]);
 
-      const data = await response.json();
-      setExpertise([...expertise, data]);
-      setIsAddingExpertise(false);
+      // Reset form and close dialog
       setNewExpertise({ name: "", level: "" });
+      setIsAddingExpertise(false);
     } catch (error) {
       console.error("Error adding expertise:", error);
     }
