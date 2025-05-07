@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -23,7 +24,7 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, DollarSign, Calendar } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +62,10 @@ export default function ProjectsPage() {
     budget: "",
     deadline: "",
     technologies: [""],
+  });
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [applicationData, setApplicationData] = useState({
+    cover_letter: "",
   });
 
   useEffect(() => {
@@ -164,142 +169,123 @@ export default function ProjectsPage() {
     });
   };
 
-  const renderProject = (project: Project) => {
-    // Check if we need to handle a project without a student (like available projects)
-    const hasStudent = project.student && project.student.name;
-    
-    // Determine badge variant based on status
-    const getBadgeVariant = () => {
-      if (project.status === "COMPLETED") return "default";
-      if (project.status === "REVIEW") return "secondary";
-      if (project.status === "OPEN") return "outline";
-      return "outline";
-    };
-    
-    // Format the status text
-    const getStatusText = () => {
-      if (project.type === "APPLICATION") {
-        return `Application: ${project.status}`;
+  const handleApplyToProject = async (project: Project) => {
+    try {
+      if (!user?.students || user.students.length === 0) {
+        throw new Error("No student account found");
       }
-      return project.status.replace("_", " ");
-    };
-    
+
+      const studentId = user.students[0].id;
+      const response = await fetch("/api/dashboard/projects/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          project_id: project.id,
+          student_id: studentId,
+          cover_letter: applicationData.cover_letter,
+          userRole: "STUDENT",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+        throw new Error(errorData.error || "Failed to apply to project");
+      }
+
+      // Close the modal and reset application data
+      setSelectedProject(null);
+      setApplicationData({ cover_letter: "" });
+
+      // Optionally, show a success toast or update projects list
+      alert("Application submitted successfully!");
+    } catch (error) {
+      console.error("Error applying to project:", error);
+      alert(error instanceof Error ? error.message : "Failed to apply to project");
+    }
+  };
+
+  const renderProject = (project: Project) => {
     return (
-      <Card key={project.id} className="overflow-hidden">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <Card key={project.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-4 bg-gray-50/50">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl">{project.title}</CardTitle>
-              {hasStudent ? (
-                <CardDescription className="mt-1.5">
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={project.student.avatar_url} />
-                      <AvatarFallback>
-                        {project.student.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>{project.student.name}</span>
-                  </div>
-                </CardDescription>
-              ) : (
-                project.company_name && (
-                  <CardDescription className="mt-1.5">
-                    {project.company_name}
-                  </CardDescription>
-                )
-              )}
+              <CardTitle className="text-xl font-bold text-gray-800">
+                {project.title}
+              </CardTitle>
+              <CardDescription className="mt-1 text-gray-600">
+                {project.company_name || "SkillBridge Project"}
+              </CardDescription>
             </div>
-            <Badge variant={getBadgeVariant()} className="w-fit">
-              {getStatusText()}
+            <Badge 
+              variant={
+                project.status === "COMPLETED" ? "default" 
+                : project.status === "IN_PROGRESS" ? "secondary"
+                : "outline"
+              } 
+              className="uppercase tracking-wider"
+            >
+              {project.status.replace("_", " ")}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div>
-              <h4 className="text-sm font-medium mb-2">Description</h4>
-              <p className="text-sm text-muted-foreground">
-                {project.description}
-              </p>
+        <CardContent className="flex-grow space-y-4 p-6">
+          <div className="text-sm text-gray-700 line-clamp-3">
+            {project.description}
+          </div>
+          
+          {project.skills && project.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {project.skills.slice(0, 3).map((skill, index) => (
+                <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
+                  {skill}
+                </Badge>
+              ))}
+              {project.skills.length > 3 && (
+                <Badge variant="outline" className="bg-gray-100">
+                  +{project.skills.length - 3} more
+                </Badge>
+              )}
             </div>
-            
-            {project.skills && project.skills.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-3">Skills</h4>
-                <div className="flex flex-wrap gap-2">
-                  {project.skills.map((skill, index) => (
-                    <Badge key={index} variant="outline" className="px-3 py-1">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
+          )}
+          
+          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+            {project.budget && (
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-green-600" />
+                <span>${project.budget}</span>
               </div>
             )}
-            
-            {project.progress !== undefined && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-medium">Progress</h4>
-                  <span className="text-sm text-muted-foreground">
-                    {project.progress}%
-                  </span>
-                </div>
-                <Progress value={project.progress} className="h-2" />
+            {project.due_date && (
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span>{new Date(project.due_date).toLocaleDateString()}</span>
               </div>
             )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {project.due_date && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Due Date</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {project.due_date}
-                  </p>
-                </div>
-              )}
-              
-              {project.last_updated && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Last Updated</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {project.last_updated}
-                  </p>
-                </div>
-              )}
-              
-              {project.budget && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Budget</h4>
-                  <p className="text-sm text-muted-foreground">
-                    ${project.budget}
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" size="sm" className="px-4">
-                View Details
-              </Button>
-              
-              {user?.role === "STUDENT" && project.type === "AVAILABLE" && (
-                <Button size="sm" className="px-4">
-                  Apply Now
-                </Button>
-              )}
-              
-              {project.status === "REVIEW" && (
-                <Button size="sm" className="px-4">
-                  Review Project
-                </Button>
-              )}
-            </div>
           </div>
         </CardContent>
+        <CardFooter className="border-t p-4 bg-gray-50">
+          <div className="flex justify-between items-center w-full">
+            <Button variant="outline" size="sm">
+              View Details
+            </Button>
+            
+            {user?.role === "STUDENT" && project.type === "AVAILABLE" && (
+              <Button 
+                size="sm" 
+                onClick={() => {
+                  setSelectedProject(project);
+                  setApplicationData({ cover_letter: "" });
+                }}
+              >
+                Apply Now
+              </Button>
+            )}
+          </div>
+        </CardFooter>
       </Card>
     );
   };
@@ -951,6 +937,55 @@ export default function ProjectsPage() {
             )}
           </TabsContent>
         </Tabs>
+      )}
+
+      {selectedProject && (
+        <Dialog 
+          open={!!selectedProject} 
+          onOpenChange={() => setSelectedProject(null)}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Apply to {selectedProject.title}</DialogTitle>
+              <DialogDescription>
+                Submit your application for this project
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="cover_letter">Cover Letter</Label>
+                <Textarea
+                  id="cover_letter"
+                  placeholder="Why are you a great fit for this project? (Optional)"
+                  value={applicationData.cover_letter}
+                  onChange={(e) => 
+                    setApplicationData({
+                      ...applicationData, 
+                      cover_letter: e.target.value 
+                    })
+                  }
+                  rows={5}
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedProject(null)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => handleApplyToProject(selectedProject)}
+                disabled={!selectedProject}
+              >
+                Submit Application
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

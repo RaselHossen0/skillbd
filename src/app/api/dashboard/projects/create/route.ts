@@ -7,10 +7,10 @@ export async function POST(request: NextRequest) {
     // Get the request body
     const body = await request.json();
     
-    // Verify user role and appropriate data
+    // Enhanced validation
     if (!body.userRole) {
       return NextResponse.json(
-        { error: 'Missing required field: userRole' },
+        { error: 'Missing required field: userRole', details: body },
         { status: 400 }
       );
     }
@@ -99,23 +99,72 @@ export async function POST(request: NextRequest) {
         );
       }
     } else if (userRole === 'STUDENT') {
-      // Students apply to projects, not create them
+      // Validate student project application
       if (!body.project_id || !body.student_id) {
         return NextResponse.json(
-          { error: 'Missing required fields for project application: project_id and student_id' },
+          { 
+            error: 'Missing required fields for project application', 
+            details: {
+              project_id: body.project_id ? 'Provided' : 'Missing',
+              student_id: body.student_id ? 'Provided' : 'Missing'
+            }
+          },
           { status: 400 }
         );
       }
       
       try {
-        // Use the server-side client to bypass RLS
+        // First, check if the project exists and is open
+        const { data: projectCheck, error: projectError } = await supabaseAdmin
+          .from('projects')
+          .select('id, status')
+          .eq('id', body.project_id)
+          .single();
+
+        if (projectError || !projectCheck) {
+          return NextResponse.json(
+            { 
+              error: 'Invalid project', 
+              details: projectError || 'Project not found' 
+            },
+            { status: 404 }
+          );
+        }
+
+        if (projectCheck.status !== 'OPEN') {
+          return NextResponse.json(
+            { 
+              error: 'Project is not currently accepting applications', 
+              current_status: projectCheck.status 
+            },
+            { status: 400 }
+          );
+        }
+
+        // Check if student has already applied
+        const { data: existingApplication, error: existingError } = await supabaseAdmin
+          .from('project_applicants')
+          .select('id')
+          .eq('project_id', body.project_id)
+          .eq('student_id', body.student_id)
+          .single();
+
+        if (existingApplication) {
+          return NextResponse.json(
+            { error: 'You have already applied to this project' },
+            { status: 400 }
+          );
+        }
+
+        // Insert new project application
         const { data: application, error } = await supabaseAdmin
           .from('project_applicants')
           .insert({
             project_id: body.project_id,
             student_id: body.student_id,
-            cover_letter: body.cover_letter,
-            status: 'PENDING'
+            cover_letter: body.cover_letter || '',
+            status: 'PENDING',
+            applied_at: new Date().toISOString()
           })
           .select()
           .single();
@@ -126,24 +175,32 @@ export async function POST(request: NextRequest) {
           success: true,
           application,
           message: 'Project application submitted successfully'
-        });
+        }, { status: 201 });
       } catch (error: any) {
-        console.error('Error applying to project:', error);
+        console.error('Detailed project application error:', {
+          message: error.message,
+          details: error,
+          body: body
+        });
+        
         return NextResponse.json(
-          { error: error.message || 'Failed to apply to project' },
+          { 
+            error: 'Failed to submit project application', 
+            details: error.message 
+          },
           { status: 500 }
         );
       }
     } else {
       return NextResponse.json(
-        { error: 'Invalid user role' },
-        { status: 400 }
+        { error: 'Invalid operation for this user role' },
+        { status: 403 }
       );
     }
   } catch (error) {
-    console.error('Error in project creation API:', error);
+    console.error('Unhandled error in project creation API:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to process request', details: String(error) },
       { status: 500 }
     );
   }
