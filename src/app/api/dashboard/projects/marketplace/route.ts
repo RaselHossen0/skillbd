@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import * as projectUtils from '@/lib/projects';
 
 export async function GET(request: NextRequest) {
@@ -12,20 +12,77 @@ export async function GET(request: NextRequest) {
     const paid = url.searchParams.get('paid');
     const studentId = url.searchParams.get('studentId');
     
-    // Fetch available projects
-    const availableProjects = await projectUtils.getAvailableProjects();
+    // Use server-side client with service role to bypass RLS
+    const supabaseServerClient = createServerSupabaseClient();
     
-    if (!availableProjects || availableProjects.length === 0) {
+    // Fetch open projects
+    const { data: projects, error: projectsError } = await supabaseServerClient
+      .from('projects')
+      .select(`
+        id,
+        title,
+        description,
+        is_paid,
+        budget,
+        deadline,
+        status,
+        created_at,
+        employer_id,
+        employers (
+          id,
+          company_name
+        ),
+        project_skills (
+          skill_id,
+          skills (
+            id,
+            name,
+            category
+          )
+        )
+      `)
+      .eq('status', 'OPEN')
+      .order('created_at', { ascending: false });
+    
+    if (projectsError) {
+      console.error('Error fetching projects:', projectsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch projects' },
+        { status: 500 }
+      );
+    }
+    
+    if (!projects || projects.length === 0) {
       return NextResponse.json({ projects: [] });
     }
     
-    // Filter projects based on query parameters
-    let filteredProjects = availableProjects;
+    // Process and transform the project data
+    let processedProjects = projects.map((project: any) => {
+      // Extract technologies/skills
+      const technologies = project.project_skills
+        ?.map((ps: any) => ps.skills?.name)
+        .filter(Boolean) || [];
+      
+      return {
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        is_paid: project.is_paid,
+        budget: project.budget,
+        deadline: project.deadline,
+        status: project.status,
+        company_name: project.employers?.company_name,
+        technologies,
+        created_at: project.created_at,
+        type: 'AVAILABLE'
+      };
+    });
     
+    // Filter projects based on query parameters
     // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredProjects = filteredProjects.filter(project => 
+      processedProjects = processedProjects.filter(project => 
         project.title?.toLowerCase().includes(searchLower) || 
         project.description?.toLowerCase().includes(searchLower)
       );
@@ -33,16 +90,14 @@ export async function GET(request: NextRequest) {
     
     // Apply category filter (assuming category is stored in technologies)
     if (category) {
-      filteredProjects = filteredProjects.filter(project => 
+      processedProjects = processedProjects.filter(project => 
         project.technologies?.some((tech: string) => tech.toLowerCase() === category.toLowerCase())
       );
     }
     
     // Apply skill filter
     if (skill) {
-      // Assuming we have a separate project_skills table, we'd need to fetch this data
-      // For now, we'll just filter by technologies which should contain skills
-      filteredProjects = filteredProjects.filter(project => 
+      processedProjects = processedProjects.filter(project => 
         project.technologies?.some((tech: string) => tech.toLowerCase() === skill.toLowerCase())
       );
     }
@@ -50,13 +105,13 @@ export async function GET(request: NextRequest) {
     // Apply paid filter
     if (paid !== null && paid !== undefined) {
       const isPaid = paid === 'true';
-      filteredProjects = filteredProjects.filter(project => project.is_paid === isPaid);
+      processedProjects = processedProjects.filter(project => project.is_paid === isPaid);
     }
     
     // Check if student has already applied to projects
     if (studentId) {
       try {
-        const { data: applications, error } = await supabase
+        const { data: applications, error } = await supabaseServerClient
           .from('project_applicants')
           .select('project_id')
           .eq('student_id', studentId);
@@ -65,7 +120,7 @@ export async function GET(request: NextRequest) {
           const appliedProjectIds = applications.map(app => app.project_id);
           
           // Add an 'applied' flag to projects
-          filteredProjects = filteredProjects.map(project => ({
+          processedProjects = processedProjects.map(project => ({
             ...project,
             applied: appliedProjectIds.includes(project.id)
           }));
@@ -75,7 +130,7 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    return NextResponse.json({ projects: filteredProjects });
+    return NextResponse.json({ projects: processedProjects });
   } catch (error) {
     console.error('Error fetching marketplace projects:', error);
     return NextResponse.json(

@@ -358,7 +358,18 @@ export async function getAvailableProjects() {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data;
+    
+    // Projects now have technologies directly in the technologies column
+    // Return the data as is, or transform it if needed
+    return data.map((project: any) => {
+      // Ensure technologies is an array even if it's null/undefined
+      const technologies = project.technologies || [];
+      
+      return {
+        ...project,
+        technologies
+      };
+    });
   } catch (error) {
     console.error('Error fetching available projects:', error);
     throw error;
@@ -375,6 +386,7 @@ export async function getStudentProjects(studentId: string) {
         id,
         status,
         applied_at,
+        project_id,
         projects (
           *,
           employers (
@@ -387,28 +399,35 @@ export async function getStudentProjects(studentId: string) {
 
     if (appError) throw appError;
 
-    // Then get mentor challenges assigned to the student
-    const { data: challenges, error: chalError } = await supabase
-      .from('mentor_challenges')
+    // Get assigned projects
+    const { data: assignedProjects, error: assignedError } = await supabase
+      .from('projects')
       .select(`
-        *,
-        mentors (
+        id,
+        title,
+        description,
+        is_paid,
+        budget,
+        deadline,
+        status,
+        created_at,
+        employer_id,
+        employers (
           id,
-          user_id,
-          users (
-            name,
-            avatar_url
-          )
+          company_name
         )
       `)
-      .eq('student_id', studentId);
+      .eq('status', 'IN_PROGRESS')
+      .contains('assigned_students', [studentId]);
 
-    if (chalError) throw chalError;
+    if (assignedError) {
+      console.error('Error fetching assigned projects:', assignedError);
+    }
 
     // Combine both types of projects
     return {
-      applications,
-      challenges
+      applications: applications || [],
+      assignedProjects: assignedProjects || []
     };
   } catch (error) {
     console.error('Error fetching student projects:', error);
@@ -554,10 +573,26 @@ export async function getProjectById(projectId: string) {
     const { data, error } = await supabase
       .from('projects')
       .select(`
-        *,
+        id,
+        title,
+        description,
+        is_paid,
+        budget,
+        deadline,
+        status,
+        created_at,
+        updated_at,
+        employer_id,
         employers (
           id,
           company_name
+        ),
+        project_skills (
+          skill_id,
+          skills (
+            id,
+            name
+          )
         ),
         project_applicants (
           id,
@@ -573,24 +608,27 @@ export async function getProjectById(projectId: string) {
               avatar_url
             )
           )
-        ),
-        completed_projects (
-          id,
-          student_id,
-          submission_url,
-          completed_at,
-          project_reviews (
-            id,
-            rating,
-            feedback,
-            created_at
-          )
         )
       `)
       .eq('id', projectId)
       .single();
 
     if (error) throw error;
+    
+    // Process the data
+    if (data) {
+      // Extract technologies/skills
+      const technologies = data.project_skills
+        ?.map((ps: any) => ps.skills?.name)
+        .filter(Boolean) || [];
+      
+      // Format the result
+      return {
+        ...data,
+        technologies
+      };
+    }
+    
     return data;
   } catch (error) {
     console.error('Error fetching project details:', error);
@@ -598,13 +636,22 @@ export async function getProjectById(projectId: string) {
   }
 }
 
-// Get mentor challenge details by ID
+// Get mentor expertise/challenge details by ID
 export async function getMentorChallengeById(challengeId: string) {
   try {
     const { data, error } = await supabase
-      .from('mentor_challenges')
+      .from('mentor_expertise')
       .select(`
-        *,
+        id,
+        title,
+        description,
+        mentor_id,
+        student_id,
+        status,
+        created_at,
+        updated_at,
+        deadline,
+        submission_url,
         mentors (
           id,
           user_id,
@@ -620,12 +667,6 @@ export async function getMentorChallengeById(challengeId: string) {
             name,
             avatar_url
           )
-        ),
-        challenge_reviews (
-          id,
-          rating,
-          feedback,
-          created_at
         )
       `)
       .eq('id', challengeId)
@@ -634,7 +675,7 @@ export async function getMentorChallengeById(challengeId: string) {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error fetching mentor challenge details:', error);
+    console.error('Error fetching mentor expertise details:', error);
     throw error;
   }
 } 

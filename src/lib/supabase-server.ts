@@ -1,21 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_SERVICE_KEY } from './env';
 
-// Create a Supabase client with the service role key for server operations
-// This bypasses RLS policies and should ONLY be used in server-side code
-export const createServerSupabaseClient = () => {
-  if (!SUPABASE_URL) {
-    throw new Error('SUPABASE_URL is not defined');
+// Create a Supabase client with the service role key
+export function createServerSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
   }
-
-  if (!SUPABASE_SERVICE_KEY) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not defined');
-  }
-
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  
+  return createClient(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
   });
-}; 
+} 

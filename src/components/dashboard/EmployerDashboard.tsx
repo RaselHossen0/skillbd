@@ -69,6 +69,18 @@ interface Activity {
   progress?: number;
 }
 
+interface Project {
+  id: string | number;
+  title: string;
+  description: string;
+  status: string;
+  is_paid: boolean;
+  budget?: number;
+  deadline?: string;
+  technologies?: string[];
+  created_at: string;
+}
+
 interface JobFormData {
   title: string;
   description: string;
@@ -94,6 +106,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [jobFormData, setJobFormData] = useState<JobFormData>({
     title: "",
     description: "",
@@ -151,6 +164,15 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
           const jobsData = await jobsResponse.json();
 
           setJobs(jobsData.jobs || []);
+          
+          // Fetch employer projects
+          const projectsResponse = await fetch(
+            `/api/dashboard/employers/projects?employerId=${employerId}`
+          );
+          if (!projectsResponse.ok) throw new Error("Failed to fetch projects");
+          const projectsData = await projectsResponse.json();
+          
+          setProjects(projectsData.projects || []);
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -612,6 +634,60 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
               View All Sessions
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Projects section */}
+      <Card className="w-full">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle>Projects</CardTitle>
+            <Button asChild size="sm">
+              <Link href="/dashboard/projects" className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                Create Project
+              </Link>
+            </Button>
+          </div>
+          <CardDescription>Manage active projects and applications</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {projects.length > 0 ? (
+            <div className="space-y-4">
+              {projects.slice(0, 3).map((project) => (
+                <div
+                  key={project.id}
+                  className="flex items-center justify-between border p-4 rounded-lg"
+                >
+                  <div>
+                    <h4 className="font-medium">{project.title}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant={project.status === "OPEN" ? "outline" : 
+                              project.status === "IN_PROGRESS" ? "secondary" : "default"}>
+                        {project.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/dashboard/projects`}>
+                      View Details
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+              {projects.length > 3 && (
+                <Button variant="outline" className="w-full mt-2" asChild>
+                  <Link href="/dashboard/projects">
+                    View All Projects
+                  </Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No projects posted yet. Create your first project!
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

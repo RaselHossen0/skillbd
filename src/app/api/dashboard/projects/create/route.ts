@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import * as projectUtils from '@/lib/projects';
 
 export async function POST(request: NextRequest) {
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userRole = body.userRole;
+    const supabaseAdmin = createServerSupabaseClient();
     
     if (userRole === 'EMPLOYER') {
       // Employer is creating a new project
@@ -27,15 +28,23 @@ export async function POST(request: NextRequest) {
       }
       
       try {
-        const project = await projectUtils.createEmployerProject({
-          employer_id: body.employer_id,
-          title: body.title,
-          description: body.description,
-          is_paid: body.is_paid,
-          budget: body.budget,
-          deadline: body.deadline,
-          technologies: body.technologies
-        });
+        // Use the server-side client to bypass RLS
+        const { data: project, error } = await supabaseAdmin
+          .from('projects')
+          .insert({
+            employer_id: body.employer_id,
+            title: body.title,
+            description: body.description,
+            is_paid: body.is_paid || false,
+            budget: body.budget,
+            deadline: body.deadline,
+            status: 'OPEN',
+            technologies: body.technologies || []
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
         
         return NextResponse.json({ 
           success: true,
@@ -59,18 +68,27 @@ export async function POST(request: NextRequest) {
       }
       
       try {
-        const project = await projectUtils.createMentorProject({
-          mentor_id: body.mentor_id,
-          title: body.title,
-          description: body.description,
-          deadline: body.deadline,
-          technologies: body.technologies,
-          student_id: body.student_id
-        });
+        // Use the server-side client to bypass RLS
+        const { data: challenge, error } = await supabaseAdmin
+          .from('mentor_expertise')
+          .insert({
+            mentor_id: body.mentor_id,
+            title: body.title,
+            description: body.description,
+            deadline: body.deadline,
+            status: 'IN_PROGRESS',
+            is_paid: false,
+            technologies: body.technologies || [],
+            student_id: body.student_id
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
         
         return NextResponse.json({ 
           success: true,
-          project,
+          project: challenge,
           message: 'Challenge created successfully'
         });
       } catch (error: any) {
@@ -90,11 +108,19 @@ export async function POST(request: NextRequest) {
       }
       
       try {
-        const application = await projectUtils.applyToProject({
-          project_id: body.project_id,
-          student_id: body.student_id,
-          cover_letter: body.cover_letter
-        });
+        // Use the server-side client to bypass RLS
+        const { data: application, error } = await supabaseAdmin
+          .from('project_applicants')
+          .insert({
+            project_id: body.project_id,
+            student_id: body.student_id,
+            cover_letter: body.cover_letter,
+            status: 'PENDING'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
         
         return NextResponse.json({ 
           success: true,

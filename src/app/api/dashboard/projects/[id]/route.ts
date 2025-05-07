@@ -17,15 +17,15 @@ export async function GET(
       );
     }
 
-    // Check if this is a regular project or a mentor challenge
+    // Check if this is a regular project or a mentor expertise
     const { data: projectExists, error: projectError } = await supabase
       .from('projects')
       .select('id')
       .eq('id', projectId)
       .maybeSingle();
 
-    const { data: challengeExists, error: challengeError } = await supabase
-      .from('mentor_challenges')
+    const { data: expertiseExists, error: expertiseError } = await supabase
+      .from('mentor_expertise')
       .select('id')
       .eq('id', projectId)
       .maybeSingle();
@@ -43,18 +43,18 @@ export async function GET(
       }
       
       return NextResponse.json({ project: projectData, type: 'employer' });
-    } else if (challengeExists) {
-      // It's a mentor challenge
-      const challengeData = await projectUtils.getMentorChallengeById(projectId);
+    } else if (expertiseExists) {
+      // It's a mentor expertise/challenge
+      const expertiseData = await projectUtils.getMentorChallengeById(projectId);
       
-      if (!challengeData) {
+      if (!expertiseData) {
         return NextResponse.json(
-          { error: 'Challenge not found' },
+          { error: 'Expertise/challenge not found' },
           { status: 404 }
         );
       }
       
-      return NextResponse.json({ project: challengeData, type: 'mentor' });
+      return NextResponse.json({ project: expertiseData, type: 'mentor' });
     } else {
       return NextResponse.json(
         { error: 'Project not found' },

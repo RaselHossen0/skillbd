@@ -61,8 +61,6 @@ export async function GET(request: NextRequest) {
       .eq('status', 'OPEN')
       .order('created_at', { ascending: false });
     
-    // If the student has skills, try to match projects that require those skills
-    // But still return other projects if there are no matches or too few matches
     const { data: projects, error: projectsError } = await query;
     
     if (projectsError) {
@@ -85,7 +83,7 @@ export async function GET(request: NextRequest) {
       if (skillIds.length > 0 && project.project_skills) {
         const projectSkillIds = project.project_skills.map((ps: any) => ps.skill_id);
         const matches = projectSkillIds.filter((skillId: string) => skillIds.includes(skillId)).length;
-        relevanceScore = matches / projectSkillIds.length;
+        relevanceScore = projectSkillIds.length > 0 ? matches / projectSkillIds.length : 0;
       }
       
       return {

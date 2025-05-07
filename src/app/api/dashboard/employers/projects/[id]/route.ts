@@ -32,6 +32,7 @@ export async function GET(
         status,
         created_at,
         updated_at,
+        technologies,
         employer_id,
         employers (
           id,
@@ -87,9 +88,10 @@ export async function GET(
       updated_at: data.updated_at,
       employer_id: data.employer_id,
       company_name: employerData?.company_name,
-      technologies: data.project_skills
-        ?.map((ps: any) => ps.skills?.name)
-        .filter(Boolean) || [],
+      technologies: data.technologies || 
+        data.project_skills
+          ?.map((ps: any) => ps.skills?.name)
+          .filter(Boolean) || [],
       applicants: data.project_applicants?.map((app: any) => ({
         id: app.id,
         status: app.status,
@@ -149,6 +151,7 @@ export async function PATCH(
     if (budget !== undefined) updateData.budget = budget;
     if (deadline !== undefined) updateData.deadline = deadline ? new Date(deadline).toISOString() : null;
     if (status !== undefined) updateData.status = status;
+    if (technologies !== undefined) updateData.technologies = technologies;
     
     // Only proceed if there's something to update
     if (Object.keys(updateData).length === 0 && !technologies) {

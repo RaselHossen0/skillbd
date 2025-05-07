@@ -49,6 +49,7 @@ interface Project {
   budget: string | number;
   deadline: string;
   skills: string[] | any[];
+  type: string;
 }
 
 interface Activity {
@@ -95,7 +96,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   const [currentSession, setCurrentSession] = useState<any>(null);
   const [isDeletingSession, setIsDeletingSession] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-  const [availableProjects, setAvailableProjects] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -131,8 +131,8 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           if (!skillsResponse.ok) throw new Error('Failed to fetch skills');
           const skillsData = await skillsResponse.json();
           
-          // Fetch recommended projects
-          const projectsResponse = await fetch(`/api/dashboard/projects?studentId=${studentId}`);
+          // Fetch projects
+          const projectsResponse = await fetch(`/api/dashboard/projects?userId=${user.id}&userRole=${user.role}`);
           if (!projectsResponse.ok) throw new Error('Failed to fetch projects');
           const projectsData = await projectsResponse.json();
           
@@ -150,17 +150,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             ...prev,
             applications_count: applicationsData.applications?.length || 0
           }));
-          
-          // Fetch available projects
-          try {
-            const projectsResponse = await fetch(`/api/dashboard/students/available-projects?studentId=${studentId}`);
-            if (projectsResponse.ok) {
-              const projectsData = await projectsResponse.json();
-              setAvailableProjects(projectsData.projects || []);
-            }
-          } catch (error) {
-            console.error('Error fetching available projects:', error);
-          }
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -746,57 +735,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             {applications.length > 0 && (
               <Button variant="outline" className="w-full" asChild>
                 <Link href="/jobs">Find More Jobs</Link>
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Available Projects */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Available Projects</CardTitle>
-            <CardDescription>Real-world projects from employers</CardDescription>
-          </div>
-          <Button asChild>
-            <Link href="/dashboard/projects">Browse All Projects</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {availableProjects.length > 0 ? (
-              availableProjects.slice(0, 3).map((project) => (
-                <div key={project.id} className="flex items-center justify-between border p-4 rounded-lg">
-                  <div>
-                    <h4 className="font-medium">{project.title}</h4>
-                    <p className="text-sm text-muted-foreground">{project.company_name || "Company"}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {project.is_paid && (
-                        <Badge variant="secondary">Paid: ${project.budget}</Badge>
-                      )}
-                      {project.deadline && (
-                        <Badge variant="outline">Deadline: {formatDate(project.deadline)}</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/projects?id=${project.id}`}>View Details</Link>
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">No available projects at the moment.</p>
-                <Button variant="outline" className="mt-4 w-full" asChild>
-                  <Link href="/dashboard/projects">Find Projects</Link>
-                </Button>
-              </div>
-            )}
-            
-            {availableProjects.length > 0 && (
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/projects">Find More Projects</Link>
               </Button>
             )}
           </div>

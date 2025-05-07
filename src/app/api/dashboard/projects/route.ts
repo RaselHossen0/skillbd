@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import * as projectUtils from '@/lib/projects';
 
 // Define TypeScript types with any to accommodate Supabase's return types
@@ -41,8 +41,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Use server-side Supabase client to bypass RLS
+    const supabaseAdmin = createServerSupabaseClient();
+
     // Get user profile to determine role-specific IDs
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select(`
         id,
@@ -76,9 +79,9 @@ export async function GET(request: NextRequest) {
 
       // Fetch both mentor challenges and assigned employer projects
       try {
-        // First get mentor's own challenges
-        const { data: mentorChallenges, error: mentorError } = await supabase
-          .from('mentor_challenges')
+        // First get mentor's own challenges - fix the relationships based on schema
+        const { data: mentorChallenges, error: mentorError } = await supabaseAdmin
+          .from('mentor_expertise')
           .select(`
             id,
             title,
@@ -89,8 +92,10 @@ export async function GET(request: NextRequest) {
             updated_at,
             deadline,
             submission_url,
+            student_id,
             students (
               id,
+              user_id,
               users (
                 id,
                 name,
@@ -115,13 +120,13 @@ export async function GET(request: NextRequest) {
           updated_at: challenge.updated_at,
           deadline: challenge.deadline,
           submission_url: challenge.submission_url,
-          student_id: challenge.students?.id,
+          student_id: challenge.student_id,
           student_name: challenge.students?.users?.name || 'Unassigned',
           student_avatar: challenge.students?.users?.avatar_url
         }));
 
-        // Also fetch employer projects assigned to this mentor
-        const { data: assignedProjects, error: assignedError } = await supabase
+        // Also fetch employer projects - fix relationships here too
+        const { data: assignedProjects, error: assignedError } = await supabaseAdmin
           .from('projects')
           .select(`
             id,
@@ -150,7 +155,7 @@ export async function GET(request: NextRequest) {
               )
             )
           `)
-          .eq('mentor_id', mentorId)
+          .eq('status', 'IN_PROGRESS')
           .order('created_at', { ascending: false });
 
         if (assignedError) throw assignedError;
@@ -193,11 +198,37 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        // Get student projects
-        const studentProjects = await projectUtils.getStudentProjects(studentId);
-        
+        // Get student projects using server-side Supabase client
+        const { data: applications, error: appError } = await supabaseAdmin
+          .from('project_applicants')
+          .select(`
+            id,
+            status,
+            applied_at,
+            project_id,
+            projects (
+              id,
+              title,
+              description,
+              is_paid,
+              budget,
+              deadline,
+              status,
+              created_at,
+              technologies,
+              employer_id,
+              employers (
+                id,
+                company_name
+              )
+            )
+          `)
+          .eq('student_id', studentId);
+
+        if (appError) throw appError;
+
         // Format applications
-        const applications = (studentProjects.applications || []).map((app: any) => ({
+        const formattedApplications = (applications || []).map((app: any) => ({
           id: app.projects.id,
           application_id: app.id,
           title: app.projects.title,
@@ -212,23 +243,99 @@ export async function GET(request: NextRequest) {
           employer_name: app.projects.employers?.company_name
         }));
         
-        // Format challenges
-        const challenges = (studentProjects.challenges || []).map((challenge: any) => ({
-          id: challenge.id,
-          title: challenge.title,
-          description: challenge.description,
-          status: challenge.status,
-          type: 'CHALLENGE',
-          technologies: challenge.technologies || [],
-          created_at: challenge.created_at,
-          deadline: challenge.deadline,
-          mentor_id: challenge.mentor_id,
-          mentor_name: challenge.mentors?.users?.name,
-          submission_url: challenge.submission_url
+        // Get assigned projects
+        const { data: assignedProjects, error: assignedError } = await supabaseAdmin
+          .from('projects')
+          .select(`
+            id,
+            title,
+            description,
+            is_paid,
+            budget,
+            deadline,
+            status,
+            created_at,
+            technologies,
+            employer_id,
+            employers (
+              id,
+              company_name
+            )
+          `)
+          .eq('status', 'IN_PROGRESS')
+          .contains('assigned_students', [studentId]);
+
+        if (assignedError) {
+          console.error('Error fetching assigned projects:', assignedError);
+        }
+
+        // Format assigned projects
+        const formattedAssigned = (assignedProjects || []).map((project: any) => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          status: project.status,
+          type: 'ASSIGNED',
+          technologies: project.technologies || [],
+          created_at: project.created_at,
+          deadline: project.deadline,
+          budget: project.budget,
+          is_paid: project.is_paid,
+          employer_id: project.employer_id,
+          company_name: project.employers?.company_name,
+          assigned: true
         }));
+
+        // Combine types
+        projects = [...formattedApplications, ...formattedAssigned];
         
-        // Combine both types
-        projects = [...applications, ...challenges];
+        // Also get available projects for the marketplace
+        try {
+          // Get available projects directly
+          const { data: availableProjects, error: availableError } = await supabaseAdmin
+            .from('projects')
+            .select(`
+              id,
+              title,
+              description,
+              is_paid,
+              budget,
+              deadline,
+              status,
+              created_at,
+              technologies,
+              employer_id,
+              employers (
+                id,
+                company_name
+              )
+            `)
+            .eq('status', 'OPEN')
+            .order('created_at', { ascending: false });
+            
+          if (availableError) throw availableError;
+          
+          // Format available projects
+          const formattedAvailable = (availableProjects || []).map((project: any) => ({
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            status: 'OPEN',
+            type: 'AVAILABLE',
+            technologies: project.technologies || [],
+            created_at: project.created_at,
+            deadline: project.deadline,
+            budget: project.budget,
+            is_paid: project.is_paid,
+            employer_id: project.employer_id,
+            company_name: project.employers?.company_name
+          }));
+          
+          // Add available projects to the list
+          projects = [...projects, ...formattedAvailable];
+        } catch (availableError) {
+          console.error('Error fetching available projects:', availableError);
+        }
       } catch (error) {
         console.error('Error fetching student projects:', error);
         return NextResponse.json(
@@ -247,8 +354,8 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        // Get employer projects
-        const { data, error } = await supabase
+        // Get employer projects using server-side Supabase client
+        const { data, error } = await supabaseAdmin
           .from('projects')
           .select(`
             id,
@@ -261,15 +368,6 @@ export async function GET(request: NextRequest) {
             technologies,
             created_at,
             updated_at,
-            mentor_id,
-            mentors (
-              id, 
-              users (
-                id,
-                name,
-                avatar_url
-              )
-            ),
             project_applicants (
               id,
               status,
@@ -302,8 +400,6 @@ export async function GET(request: NextRequest) {
           technologies: project.technologies || [],
           created_at: project.created_at,
           updated_at: project.updated_at,
-          mentor_id: project.mentor_id,
-          mentor_name: project.mentors?.users?.name,
           applicants_count: project.project_applicants?.length || 0,
           applicants: project.project_applicants?.map((app: any) => ({
             id: app.id,
@@ -321,12 +417,6 @@ export async function GET(request: NextRequest) {
           { status: 500 }
         );
       }
-    }
-
-    // If no projects found but we need to show something, add mockup data for development
-    if (projects.length === 0) {
-      // Removed all mock data as per requirement
-      return NextResponse.json({ projects });
     }
 
     return NextResponse.json({ projects });

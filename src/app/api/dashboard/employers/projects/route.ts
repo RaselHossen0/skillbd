@@ -73,10 +73,11 @@ export async function GET(request: NextRequest) {
     
     // Process the data to make it more usable on the client side
     const projects = data.map((project: any) => {
-      // Extract technologies/skills
-      const technologies = project.project_skills
-        ?.map((ps: any) => ps.skills?.name)
-        .filter(Boolean) || [];
+      // Use technologies directly from the JSONB column or from project_skills
+      const technologies = project.technologies || 
+        (project.project_skills
+          ?.map((ps: any) => ps.skills?.name)
+          .filter(Boolean) || []);
       
       // Count applications
       const applications_count = project.project_applicants?.length || 0;
@@ -142,7 +143,8 @@ export async function POST(request: NextRequest) {
         is_paid: is_paid || false,
         budget,
         deadline: deadline ? new Date(deadline).toISOString() : null,
-        status
+        status,
+        technologies: technologies || []
       })
       .select()
       .single();
