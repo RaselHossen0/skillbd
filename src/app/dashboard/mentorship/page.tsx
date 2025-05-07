@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,155 +8,222 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { createSession, fetchAvailableMentors } from "@/lib/session-service";
+import { toast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+
+interface Mentor {
+  id: string;
+  name?: string;
+  position?: string;
+  company?: string;
+  expertise?: string[];
+  experience?: number;
+  bio?: string;
+  hourlyRate?: number;
+  rating?: number;
+  totalSessions?: number;
+  avatar_url?: string;
+  availability?: { day: string; slots: string[] }[];
+}
+
+interface Session {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  status: string;
+  zoom_link?: string;
+  description?: string;
+  mentor?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
+  rating?: number;
+  feedback?: string;
+}
+
+interface SessionsState {
+  upcoming: Session[];
+  past: Session[];
+}
 
 export default function MentorshipPage() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMentor, setSelectedMentor] = useState<any>(null);
+  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [sessions, setSessions] = useState<SessionsState>({ upcoming: [], past: [] });
+  const [loading, setLoading] = useState(true);
+  const [sessionTopic, setSessionTopic] = useState("");
+  const [sessionDescription, setSessionDescription] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
 
-  const mentors = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      position: "Senior Frontend Developer",
-      company: "TechVision Ltd",
-      expertise: ["React.js", "Vue.js", "JavaScript", "UI/UX"],
-      experience: 6,
-      bio: "Experienced frontend developer specializing in React.js and modern JavaScript frameworks. Passionate about mentoring junior developers and teaching best practices in web development.",
-      hourlyRate: 30,
-      rating: 4.9,
-      availability: [
-        { day: "Monday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
-        { day: "Wednesday", slots: ["11:00 AM", "3:00 PM", "7:00 PM"] },
-        { day: "Friday", slots: ["9:00 AM", "1:00 PM", "5:00 PM"] },
-      ],
-      totalSessions: 42,
-      image: "",
-    },
-    {
-      id: 2,
-      name: "Ahmed Khan",
-      position: "Lead Backend Developer",
-      company: "Brain Station 23",
-      expertise: ["Node.js", "Python", "Database Design", "Cloud Architecture"],
-      experience: 8,
-      bio: "Backend specialist with extensive experience in Node.js and Python. Skilled in designing scalable architectures and optimizing database performance. Enjoys mentoring on system design principles.",
-      hourlyRate: 35,
-      rating: 4.7,
-      availability: [
-        { day: "Tuesday", slots: ["9:00 AM", "1:00 PM", "5:00 PM"] },
-        { day: "Thursday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
-        { day: "Saturday", slots: ["11:00 AM", "3:00 PM"] },
-      ],
-      totalSessions: 36,
-      image: "",
-    },
-    {
-      id: 3,
-      name: "Tania Rahman",
-      position: "UX/UI Designer",
-      company: "DesignHub BD",
-      expertise: ["UI Design", "User Research", "Figma", "Design Systems"],
-      experience: 5,
-      bio: "Creative UI/UX designer with a focus on user-centered design. Experienced in conducting user research and creating intuitive interfaces. Passionate about teaching design thinking and prototyping.",
-      hourlyRate: 25,
-      rating: 4.8,
-      availability: [
-        { day: "Monday", slots: ["11:00 AM", "3:00 PM", "7:00 PM"] },
-        { day: "Wednesday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
-        { day: "Sunday", slots: ["9:00 AM", "1:00 PM", "5:00 PM"] },
-      ],
-      totalSessions: 29,
-      image: "",
-    },
-    {
-      id: 4,
-      name: "Rafiq Islam",
-      position: "CTO",
-      company: "NewsCred",
-      expertise: ["Tech Leadership", "System Architecture", "Career Guidance", "Full-Stack"],
-      experience: 12,
-      bio: "Tech executive with over a decade of experience in leadership roles. Specializes in helping mentees navigate career growth, technical decisions, and leadership challenges in the tech industry.",
-      hourlyRate: 50,
-      rating: 4.9,
-      availability: [
-        { day: "Tuesday", slots: ["6:00 PM", "7:00 PM", "8:00 PM"] },
-        { day: "Thursday", slots: ["6:00 PM", "7:00 PM", "8:00 PM"] },
-        { day: "Saturday", slots: ["10:00 AM", "11:00 AM", "12:00 PM"] },
-      ],
-      totalSessions: 65,
-      image: "",
-    },
-    {
-      id: 5,
-      name: "Maliha Kabir",
-      position: "Mobile App Developer",
-      company: "AppLab BD",
-      expertise: ["React Native", "Flutter", "iOS", "Android"],
-      experience: 4,
-      bio: "Mobile app developer with expertise in cross-platform frameworks. Skilled in building performant and user-friendly mobile applications. Loves to mentor on mobile development best practices.",
-      hourlyRate: 28,
-      rating: 4.6,
-      availability: [
-        { day: "Monday", slots: ["9:00 AM", "1:00 PM", "5:00 PM"] },
-        { day: "Thursday", slots: ["10:00 AM", "2:00 PM", "6:00 PM"] },
-        { day: "Saturday", slots: ["11:00 AM", "3:00 PM", "7:00 PM"] },
-      ],
-      totalSessions: 18,
-      image: "",
-    },
-  ];
+  // Fetch mentors and sessions data
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        // Fetch available mentors
+        const mentorsData = await fetchAvailableMentors();
+        setMentors(mentorsData);
+        
+        // Fetch sessions if user is logged in
+        if (user && user.id) {
+          const sessionsResponse = await fetch(`/api/dashboard/sessions?userId=${user.id}&userRole=${user.role}`);
+          if (!sessionsResponse.ok) throw new Error('Failed to fetch sessions');
+          const sessionsData = await sessionsResponse.json();
+          
+          // Separate upcoming and past sessions
+          const now = new Date();
+          const upcomingSessions: Session[] = [];
+          const pastSessions: Session[] = [];
+          
+          for (const session of sessionsData.sessions || []) {
+            const sessionDate = new Date(session.date + "T" + session.time);
+            
+            if (sessionDate > now || session.status === "PENDING" || session.status === "CONFIRMED") {
+              upcomingSessions.push(session);
+            } else {
+              pastSessions.push(session);
+            }
+          }
+          
+          setSessions({ upcoming: upcomingSessions, past: pastSessions });
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, [user]);
 
-  const upcomingSessions = [
-    {
-      id: 1,
-      mentor: "Sarah Johnson",
-      title: "Frontend Career Guidance",
-      date: "Nov 15, 2023",
-      time: "10:00 AM - 11:00 AM",
-      status: "CONFIRMED",
-      zoomLink: "https://zoom.us/j/123456789",
-    },
-    {
-      id: 2,
-      mentor: "Rafiq Islam",
-      title: "Tech Leadership Discussion",
-      date: "Nov 20, 2023",
-      time: "6:00 PM - 7:00 PM",
-      status: "PENDING",
-      zoomLink: null,
-    },
-  ];
-
-  const pastSessions = [
-    {
-      id: 3,
-      mentor: "Ahmed Khan",
-      title: "Node.js Architecture Review",
-      date: "Oct 25, 2023",
-      time: "9:00 AM - 10:00 AM",
-      status: "COMPLETED",
-      rating: 5,
-      feedback: "Ahmed was extremely helpful in reviewing my backend architecture. His suggestions have significantly improved my project's performance.",
-    },
-    {
-      id: 4,
-      mentor: "Tania Rahman",
-      title: "Portfolio Design Feedback",
-      date: "Oct 18, 2023",
-      time: "3:00 PM - 4:00 PM",
-      status: "COMPLETED",
-      rating: 4,
-      feedback: "Tania provided detailed feedback on my portfolio design. I appreciated her attention to detail and practical suggestions.",
-    },
-  ];
+  // Handle session booking
+  const handleBookSession = async () => {
+    if (!user || !selectedMentor || !sessionTopic || !selectedDate || !selectedTime) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields to book a session.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Get student ID from user object
+      const studentId = user.students?.[0]?.id;
+      
+      if (!studentId) {
+        toast({
+          title: "Account error",
+          description: "Could not find your student profile. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const sessionData = {
+        title: sessionTopic,
+        description: sessionDescription,
+        date: selectedDate,
+        time: selectedTime,
+        mentor_id: selectedMentor.id,
+        student_id: studentId,
+        creator_id: user.id,
+        status: "PENDING",
+        zoom_link: ""  // Will be filled by the mentor later
+      };
+      
+      const newSession = await createSession('STUDENT', sessionData);
+      
+      // Add to upcoming sessions
+      setSessions(prev => ({
+        ...prev,
+        upcoming: [newSession, ...prev.upcoming]
+      }));
+      
+      toast({
+        title: "Session booked",
+        description: "Your mentorship session has been scheduled successfully.",
+      });
+      
+      // Clear form fields
+      setSessionTopic("");
+      setSessionDescription("");
+      setSelectedDate("");
+      setSelectedTime("");
+      
+    } catch (error) {
+      console.error('Error booking session:', error);
+      toast({
+        title: "Booking failed",
+        description: "There was a problem booking your session. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Filter mentors based on search query
   const filteredMentors = mentors.filter(mentor => {
-    return mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           mentor.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           mentor.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           mentor.expertise.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+    return mentor.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           mentor.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           mentor.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           mentor.expertise?.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
   });
+
+  // Render mentor availability slots or placeholder if not available
+  const renderAvailabilitySlots = (mentor: Mentor | null) => {
+    if (!mentor || !mentor.availability || mentor.availability.length === 0) {
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            No specific availability information. Please select a date and time below.
+          </p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-2">
+        {mentor.availability.map((avail) => (
+          <div key={avail.day} className="space-y-1">
+            <p className="text-sm font-medium">{avail.day}</p>
+            <div className="flex flex-wrap gap-2">
+              {avail.slots.map((slot) => (
+                <Badge 
+                  key={slot} 
+                  variant="outline" 
+                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                  onClick={() => setSelectedTime(slot)}
+                >
+                  {slot}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Add new joinSession function to handle zoom links
+  const joinSession = (zoomLink: string) => {
+    if (!zoomLink) {
+      toast({
+        title: "No meeting link available",
+        description: "The mentor has not provided a Zoom link for this session yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+    window.open(zoomLink, '_blank');
+  };
 
   return (
     <div className="space-y-6">
@@ -193,44 +260,50 @@ export default function MentorshipPage() {
 
           {/* Mentors Listing */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMentors.length > 0 ? (
+            {loading ? (
+              <div className="col-span-full flex items-center justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredMentors.length > 0 ? (
               filteredMentors.map((mentor) => (
                 <Card key={mentor.id} className="flex flex-col">
                   <CardHeader>
                     <div className="flex flex-col items-center text-center">
                       <Avatar className="h-24 w-24 mb-4">
-                        <AvatarImage src={mentor.image} />
-                        <AvatarFallback>{mentor.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                        <AvatarImage src={mentor.avatar_url} />
+                        <AvatarFallback>{mentor.name?.split(" ").map((n) => n[0]).join("") || "M"}</AvatarFallback>
                       </Avatar>
                       <CardTitle>{mentor.name}</CardTitle>
                       <CardDescription className="pt-1">
                         {mentor.position} at {mentor.company}
                       </CardDescription>
                       <div className="flex items-center justify-center mt-1">
-                        <span className="text-sm font-medium">⭐ {mentor.rating}/5</span>
+                        <span className="text-sm font-medium">⭐ {mentor.rating || "4.5"}/5</span>
                         <span className="mx-2">•</span>
-                        <span className="text-sm text-muted-foreground">{mentor.totalSessions} sessions</span>
+                        <span className="text-sm text-muted-foreground">{mentor.totalSessions || "25"} sessions</span>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1">
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                      {mentor.bio}
+                      {mentor.bio || `Expert in ${mentor.expertise?.join(", ") || "technology"} with professional experience.`}
                     </p>
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {mentor.expertise.map((skill) => (
+                      {mentor.expertise?.map((skill) => (
                         <Badge key={skill} variant="secondary" className="text-xs">
                           {skill}
                         </Badge>
-                      ))}
+                      )) || (
+                        <Badge variant="secondary" className="text-xs">Technology</Badge>
+                      )}
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Experience</span>
-                      <span className="font-medium">{mentor.experience} years</span>
+                      <span className="font-medium">{mentor.experience || "5+"} years</span>
                     </div>
                     <div className="flex items-center justify-between text-sm mt-2">
                       <span className="text-muted-foreground">Rate</span>
-                      <span className="font-medium">${mentor.hourlyRate}/hour</span>
+                      <span className="font-medium">${mentor.hourlyRate || "30"}/hour</span>
                     </div>
                   </CardContent>
                   <CardFooter className="border-t pt-4">
@@ -239,51 +312,96 @@ export default function MentorshipPage() {
                         <Button 
                           className="w-full" 
                           onClick={() => setSelectedMentor(mentor)}
+                          id="book-session-button"
                         >
                           Book Session
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
+                      <DialogContent className="sm:max-w-[500px]">
                         <DialogHeader>
                           <DialogTitle>Book a Session with {selectedMentor?.name}</DialogTitle>
                           <DialogDescription>
-                            Select a date and time for your mentorship session
+                            Schedule a one-on-one mentorship session for career guidance, project help, or technical advice.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="space-y-2">
-                            <h4 className="font-medium">Available slots</h4>
-                            {selectedMentor?.availability.map((avail: any) => (
-                              <div key={avail.day} className="space-y-1">
-                                <p className="text-sm font-medium">{avail.day}</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {avail.slots.map((slot: string) => (
-                                    <Badge 
-                                      key={slot} 
-                                      variant="outline" 
-                                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                                    >
-                                      {slot}
-                                    </Badge>
-                                  ))}
-                                </div>
+                            <h4 className="font-medium">Mentor Information</h4>
+                            <div className="flex items-center gap-3 p-3 border rounded-md bg-muted/20">
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={selectedMentor?.avatar_url} />
+                                <AvatarFallback>{selectedMentor?.name?.split(" ").map((n) => n[0]).join("") || "M"}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{selectedMentor?.name}</p>
+                                <p className="text-sm text-muted-foreground">{selectedMentor?.position} at {selectedMentor?.company}</p>
                               </div>
-                            ))}
+                            </div>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium">Session Topic</label>
-                            <Input placeholder="e.g. Career guidance, Project review, etc." />
+                            <h4 className="font-medium">Select Date and Time</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Date <span className="text-red-500">*</span></label>
+                                <Input 
+                                  type="date" 
+                                  value={selectedDate}
+                                  onChange={(e) => setSelectedDate(e.target.value)}
+                                  min={new Date().toISOString().split('T')[0]}
+                                  className={!selectedDate ? "border-red-300" : ""}
+                                />
+                                {!selectedDate && (
+                                  <p className="text-xs text-red-500">Date is required</p>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Time <span className="text-red-500">*</span></label>
+                                <Input 
+                                  type="time" 
+                                  value={selectedTime}
+                                  onChange={(e) => setSelectedTime(e.target.value)}
+                                  className={!selectedTime ? "border-red-300" : ""}
+                                />
+                                {!selectedTime && (
+                                  <p className="text-xs text-red-500">Time is required</p>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Please select a date and time that works for you. The mentor will confirm the appointment.</p>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Session Topic <span className="text-red-500">*</span></label>
+                            <Input 
+                              placeholder="e.g. Career guidance, Project review, etc." 
+                              value={sessionTopic}
+                              onChange={(e) => setSessionTopic(e.target.value)}
+                              className={!sessionTopic ? "border-red-300" : ""}
+                            />
+                            {!sessionTopic && (
+                              <p className="text-xs text-red-500">Topic is required</p>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <label className="text-sm font-medium">Questions/Topics to discuss</label>
                             <textarea 
                               className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                               placeholder="Brief description of what you'd like to discuss"
+                              value={sessionDescription}
+                              onChange={(e) => setSessionDescription(e.target.value)}
                             />
                           </div>
+                          {renderAvailabilitySlots(selectedMentor)}
                         </div>
-                        <DialogFooter>
-                          <Button type="submit">Book Session (${selectedMentor?.hourlyRate})</Button>
+                        <DialogFooter className="flex-col sm:flex-row gap-2">
+                          <div className="text-sm text-muted-foreground mr-auto">
+                            Rate: ${selectedMentor?.hourlyRate || 30}/hour
+                          </div>
+                          <Button 
+                            onClick={handleBookSession}
+                            disabled={!selectedDate || !selectedTime || !sessionTopic}
+                          >
+                            Book Session
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -307,18 +425,26 @@ export default function MentorshipPage() {
           {/* Upcoming Sessions */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Upcoming Sessions</h3>
-            {upcomingSessions.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : sessions.upcoming && sessions.upcoming.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {upcomingSessions.map((session) => (
-                  <Card key={session.id}>
+                {sessions.upcoming.map((session: Session) => (
+                  <Card key={session.id} className="overflow-hidden">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="text-base">{session.title}</CardTitle>
-                          <CardDescription>with {session.mentor}</CardDescription>
+                          <CardDescription>with {session.mentor?.name || "Your Mentor"}</CardDescription>
                         </div>
-                        <Badge className={session.status === "CONFIRMED" ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"}>
-                          {session.status === "CONFIRMED" ? "Confirmed" : "Pending"}
+                        <Badge className={
+                          session.status === "CONFIRMED" ? "bg-green-500 hover:bg-green-600" : 
+                          session.status === "CANCELLED" ? "bg-red-500 hover:bg-red-600" : 
+                          "bg-yellow-500 hover:bg-yellow-600"
+                        }>
+                          {session.status}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -348,13 +474,30 @@ export default function MentorshipPage() {
                           </svg>
                           <span>{session.time}</span>
                         </div>
+                        {session.description && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                            {session.description}
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="flex justify-between border-t pt-4">
-                      <Button variant="outline">Reschedule</Button>
+                      <Button 
+                        variant="outline"
+                        disabled={session.status === "CANCELLED"}
+                      >
+                        Reschedule
+                      </Button>
                       {session.status === "CONFIRMED" ? (
-                        <Button>
+                        <Button
+                          disabled={!session.zoom_link}
+                          onClick={() => joinSession(session.zoom_link || "")}
+                        >
                           Join Meeting
+                        </Button>
+                      ) : session.status === "CANCELLED" ? (
+                        <Button variant="outline" disabled>
+                          Cancelled
                         </Button>
                       ) : (
                         <Button disabled>Awaiting Confirmation</Button>
@@ -367,7 +510,12 @@ export default function MentorshipPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <p className="text-muted-foreground mb-4">You don't have any upcoming sessions</p>
-                  <Button>Find a Mentor</Button>
+                  <Button onClick={() => {
+                    const findMentorsTab = document.querySelector('[data-value="find-mentors"]') as HTMLElement;
+                    if (findMentorsTab) findMentorsTab.click();
+                  }}>
+                    Find a Mentor
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -376,21 +524,25 @@ export default function MentorshipPage() {
           {/* Past Sessions */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Past Sessions</h3>
-            {pastSessions.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center p-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : sessions.past && sessions.past.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2">
-                {pastSessions.map((session) => (
-                  <Card key={session.id}>
+                {sessions.past.map((session: Session) => (
+                  <Card key={session.id} className="overflow-hidden">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="text-base">{session.title}</CardTitle>
-                          <CardDescription>with {session.mentor}</CardDescription>
+                          <CardDescription>with {session.mentor?.name || "Your Mentor"}</CardDescription>
                         </div>
                         <div className="flex">
                           {Array(5).fill(null).map((_, i) => (
                             <svg 
                               key={i} 
-                              className={`h-4 w-4 ${i < session.rating ? "text-yellow-400" : "text-gray-300"}`}
+                              className={`h-4 w-4 ${i < (session.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}
                               fill="currentColor"
                               viewBox="0 0 24 24"
                             >
@@ -416,13 +568,68 @@ export default function MentorshipPage() {
                           <span className="mx-2">•</span>
                           <span>{session.time}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {session.feedback}
-                        </p>
+                        <div className="flex items-center gap-1 text-sm">
+                          <span className="text-muted-foreground">Status:</span>
+                          <Badge variant={session.status === "COMPLETED" ? "default" : "outline"}>
+                            {session.status}
+                          </Badge>
+                        </div>
+                        {session.feedback ? (
+                          <div>
+                            <p className="text-sm font-medium">Feedback:</p>
+                            <p className="text-sm text-muted-foreground line-clamp-3">
+                              {session.feedback}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">
+                            No feedback provided for this session.
+                          </p>
+                        )}
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end border-t pt-4">
-                      <Button variant="outline">Book Again</Button>
+                    <CardFooter className="flex justify-between border-t pt-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          if (session.mentor) {
+                            setSelectedMentor({
+                              id: session.mentor.id,
+                              name: session.mentor.name,
+                              avatar_url: session.mentor.avatar_url
+                            });
+                            
+                            // Open the dialog programmatically
+                            const findMentorsTab = document.querySelector('[data-value="find-mentors"]') as HTMLElement;
+                            if (findMentorsTab) findMentorsTab.click();
+                            
+                            // Pre-fill the topic with the previous session title
+                            setSessionTopic(`Follow-up: ${session.title}`);
+                            
+                            // Slight delay to ensure tab change completes
+                            setTimeout(() => {
+                              const bookButton = document.getElementById('book-session-button');
+                              if (bookButton) bookButton.click();
+                            }, 100);
+                          }
+                        }}
+                      >
+                        Book Again
+                      </Button>
+                      {session.zoom_link && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            // If there's a recording link available
+                            toast({
+                              title: "No recording available",
+                              description: "Session recordings are not currently available.",
+                            });
+                          }}
+                        >
+                          View Recording
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 ))}
@@ -437,6 +644,7 @@ export default function MentorshipPage() {
           </div>
         </TabsContent>
       </Tabs>
+      <Toaster />
     </div>
   );
 } 

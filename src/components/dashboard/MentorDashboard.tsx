@@ -28,7 +28,7 @@ interface Expertise {
 interface Session {
   id: string | number;
   title: string;
-  student_name: string;
+  student_name?: string;
   date: string;
   time: string;
   status: string;
@@ -37,6 +37,11 @@ interface Session {
     users?: {
       name: string;
     };
+  };
+  student?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
   };
 }
 
@@ -152,7 +157,8 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
   
   // Render a session item
   const renderSession = (session: Session) => {
-    const studentName = session.students?.users?.name || session.student_name || "Student";
+    // The enhanced API now returns student data in a more standardized format
+    const studentName = session.student?.name || "Student";
     
     return (
       <div key={session.id} className="flex items-center justify-between border p-4 rounded-lg">

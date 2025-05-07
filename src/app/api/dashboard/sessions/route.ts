@@ -45,71 +45,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    let sessions: Session[] = [];
+    // Use the enhanced database function for all roles
+    const { data, error } = await supabase
+      .rpc('get_dashboard_sessions', {
+        p_user_id: userId,
+        p_role: userRole
+      });
     
-    if (userRole === 'STUDENT') {
-      // Fetch student sessions
-      const { data, error } = await supabase
-        .from('mentorship_sessions')
-        .select(`
-          id, 
-          title, 
-          date, 
-          time, 
-          status, 
-          zoom_link,
-          description,
-          mentors:mentor_id(id, users(name, avatar_url))
-        `)
-        .eq('student_id', userId)
-        .order('date', { ascending: true });
-      
-      if (error) throw error;
-      sessions = data || [];
-    } 
-    else if (userRole === 'MENTOR') {
-      // Fetch mentor sessions
-      const { data, error } = await supabase
-        .from('mentorship_sessions')
-        .select(`
-          id, 
-          title, 
-          date, 
-          time, 
-          status, 
-          zoom_link,
-          description,
-          students:student_id(id, users(name, avatar_url))
-        `)
-        .eq('mentor_id', userId)
-        .order('date', { ascending: true });
-      
-      if (error) throw error;
-      sessions = data || [];
-    }
-    else if (userRole === 'EMPLOYER') {
-      // Fetch employer sessions - could be interviews or project discussions
-      const { data, error } = await supabase
-        .from('employer_sessions')
-        .select(`
-          id, 
-          title, 
-          date, 
-          time, 
-          status, 
-          meeting_link,
-          description,
-          applicants:applicant_id(id, users(name, avatar_url)),
-          job:job_id(id, title)
-        `)
-        .eq('employer_id', userId)
-        .order('date', { ascending: true });
-      
-      if (error) throw error;
-      sessions = data || [];
-    }
-
-    return NextResponse.json({ sessions });
+    if (error) throw error;
+    
+    return NextResponse.json({ sessions: data || [] });
   } catch (error) {
     console.error('Error fetching sessions:', error);
     return NextResponse.json(
@@ -132,11 +77,8 @@ export async function POST(request: Request) {
       );
     }
     
-    let result;
-    
-    // Create session based on user role
+    // Validate required fields for mentorship sessions
     if (userRole === 'STUDENT' || userRole === 'MENTOR') {
-      // Validate required fields
       if (!sessionData.mentor_id || !sessionData.student_id || !sessionData.title || !sessionData.date || !sessionData.time) {
         return NextResponse.json(
           { error: 'Missing required fields for mentorship session' },
@@ -144,26 +86,26 @@ export async function POST(request: Request) {
         );
       }
       
-      // Create mentorship session
+      // Use the enhanced database function for creating sessions
       const { data, error } = await supabase
-        .from('mentorship_sessions')
-        .insert([{
-          title: sessionData.title,
-          date: sessionData.date,
-          time: sessionData.time,
-          status: sessionData.status || 'PENDING',
-          zoom_link: sessionData.zoom_link || '',
-          mentor_id: sessionData.mentor_id,
-          student_id: sessionData.student_id,
-          description: sessionData.description || ''
-        }])
-        .select();
+        .rpc('create_mentorship_session', {
+          p_role: userRole,
+          p_creator_id: sessionData.creator_id,
+          p_mentor_id: sessionData.mentor_id,
+          p_student_id: sessionData.student_id,
+          p_title: sessionData.title,
+          p_description: sessionData.description || null,
+          p_date: sessionData.date,
+          p_time: sessionData.time,
+          p_zoom_link: sessionData.zoom_link || null
+        });
       
       if (error) throw error;
-      result = data;
+      return NextResponse.json({ session: data });
     } 
     else if (userRole === 'EMPLOYER') {
-      // Validate required fields
+      // For employer sessions, continue with the existing implementation
+      // since there's no enhanced function for employer sessions yet
       if (!sessionData.employer_id || !sessionData.applicant_id || !sessionData.title || !sessionData.date || !sessionData.time) {
         return NextResponse.json(
           { error: 'Missing required fields for employer session' },
@@ -188,15 +130,13 @@ export async function POST(request: Request) {
         .select();
       
       if (error) throw error;
-      result = data;
+      return NextResponse.json({ session: data[0] });
     } else {
       return NextResponse.json(
         { error: 'Invalid user role' },
         { status: 400 }
       );
     }
-    
-    return NextResponse.json({ session: result[0] });
   } catch (error) {
     console.error('Error creating session:', error);
     return NextResponse.json(
@@ -219,29 +159,26 @@ export async function PUT(request: Request) {
       );
     }
     
-    let result;
-    
     // Update session based on user role
     if (userRole === 'STUDENT' || userRole === 'MENTOR') {
-      // Update mentorship session
+      // Use the enhanced database function for updating sessions
       const { data, error } = await supabase
-        .from('mentorship_sessions')
-        .update({
-          title: sessionData.title,
-          date: sessionData.date,
-          time: sessionData.time,
-          status: sessionData.status,
-          zoom_link: sessionData.zoom_link,
-          description: sessionData.description
-        })
-        .eq('id', sessionId)
-        .select();
+        .rpc('update_mentorship_session', {
+          p_session_id: sessionId,
+          p_role: userRole,
+          p_title: sessionData.title || null,
+          p_description: sessionData.description || null,
+          p_date: sessionData.date || null,
+          p_time: sessionData.time || null, 
+          p_status: sessionData.status || null,
+          p_zoom_link: sessionData.zoom_link || null
+        });
       
       if (error) throw error;
-      result = data;
+      return NextResponse.json({ session: data });
     } 
     else if (userRole === 'EMPLOYER') {
-      // Update employer session
+      // For employer sessions, continue with the existing implementation
       const { data, error } = await supabase
         .from('employer_sessions')
         .update({
@@ -250,22 +187,19 @@ export async function PUT(request: Request) {
           time: sessionData.time,
           status: sessionData.status,
           meeting_link: sessionData.meeting_link,
-          job_id: sessionData.job_id,
           description: sessionData.description
         })
         .eq('id', sessionId)
         .select();
       
       if (error) throw error;
-      result = data;
+      return NextResponse.json({ session: data[0] });
     } else {
       return NextResponse.json(
         { error: 'Invalid user role' },
         { status: 400 }
       );
     }
-    
-    return NextResponse.json({ session: result[0] });
   } catch (error) {
     console.error('Error updating session:', error);
     return NextResponse.json(
@@ -287,26 +221,28 @@ export async function DELETE(request: Request) {
       { status: 400 }
     );
   }
-  
+
   try {
-    let result;
+    let error;
     
     // Delete session based on user role
     if (userRole === 'STUDENT' || userRole === 'MENTOR') {
-      const { error } = await supabase
+      // For mentorship sessions
+      const result = await supabase
         .from('mentorship_sessions')
         .delete()
         .eq('id', sessionId);
       
-      if (error) throw error;
+      error = result.error;
     } 
     else if (userRole === 'EMPLOYER') {
-      const { error } = await supabase
+      // For employer sessions
+      const result = await supabase
         .from('employer_sessions')
         .delete()
         .eq('id', sessionId);
       
-      if (error) throw error;
+      error = result.error;
     } else {
       return NextResponse.json(
         { error: 'Invalid user role' },
@@ -314,10 +250,9 @@ export async function DELETE(request: Request) {
       );
     }
     
-    return NextResponse.json({ 
-      success: true,
-      message: 'Session deleted successfully' 
-    });
+    if (error) throw error;
+    
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting session:', error);
     return NextResponse.json(

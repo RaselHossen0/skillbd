@@ -1,4 +1,27 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { User } from "@/types";
+
+interface DashboardStats {
+  jobs_count: number;
+  applications_count: number;
+  projects_count: number;
+  active_contracts: number;
+}
+
+interface Job {
+  id: string | number;
+  title: string;
+  company_name?: string;
+  applications_count: number;
+  deadline: string;
+  status: string;
+}
 
 interface Session {
   id: string | number;
@@ -10,7 +33,70 @@ interface Session {
   meeting_link?: string;
   applicants?: any;
   job?: any;
+  applicant?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
 }
+
+interface Activity {
+  id: number | string;
+  title: string;
+  date: string;
+  type: string;
+  status?: string;
+  progress?: number;
+}
+
+interface EmployerDashboardProps {
+  user: User;
+}
+
+// Mock data for jobs
+const mockJobs = [
+  {
+    id: 1,
+    title: "Frontend Developer",
+    company_name: "SkillBD",
+    applications_count: 12,
+    deadline: "Dec 15, 2023",
+    status: "ACTIVE"
+  },
+  {
+    id: 2,
+    title: "Backend Engineer",
+    company_name: "SkillBD",
+    applications_count: 8,
+    deadline: "Dec 20, 2023",
+    status: "ACTIVE"
+  }
+];
+
+// Mock data for activities
+const mockActivities = [
+  {
+    id: 1,
+    type: "JOB_POSTED",
+    title: "Frontend Developer Position",
+    date: "2 days ago",
+    status: "ACTIVE",
+  },
+  {
+    id: 2,
+    type: "APPLICATION_RECEIVED",
+    title: "New application for Backend Engineer",
+    date: "5 days ago",
+    status: "PENDING",
+  },
+  {
+    id: 3,
+    type: "PROJECT_STARTED",
+    title: "E-commerce Website Development",
+    date: "1 week ago",
+    progress: 25,
+  }
+];
 
 export default function EmployerDashboard({ user }: EmployerDashboardProps) {
   const [stats, setStats] = useState<DashboardStats>({
@@ -72,7 +158,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
   
   // Render a session item
   const renderSession = (session: Session) => {
-    const applicantName = session.applicants?.users?.name || session.applicant_name || "Applicant";
+    const applicantName = session.applicant?.name || session.applicants?.users?.name || session.applicant_name || "Applicant";
     const jobTitle = session.job?.title || "Job Interview";
     
     return (

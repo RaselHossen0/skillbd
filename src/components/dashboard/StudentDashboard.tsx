@@ -420,7 +420,8 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
 
   // Render a session item with actions
   const renderSessionWithActions = (session: any) => {
-    const mentorName = session.mentors?.users?.name || "Your Mentor";
+    // The enhanced API now returns mentor data in a more standardized format
+    const mentorName = session.mentor?.name || "Your Mentor";
     
     return (
       <div key={session.id} className="flex items-center justify-between border p-4 rounded-lg">
@@ -433,7 +434,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <Badge
               variant={
                 session.status === "CONFIRMED" 
-                  ? "success" 
+                  ? "secondary" 
                   : session.status === "PENDING" 
                   ? "secondary"
                   : session.status === "COMPLETED"
