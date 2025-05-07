@@ -266,16 +266,50 @@ export default function MentorDashboard({ user }: MentorDashboardProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-gradient-to-r from-background via-background to-background/80 p-6 rounded-lg border shadow-sm">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Mentor Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">Mentor Dashboard</h2>
           <p className="text-muted-foreground mt-1">
-            Welcome back, {user.name}! Here's an overview of your mentoring activities.
+            Welcome back, <span className="font-medium text-foreground">{user.name}</span>! Here's an overview of your mentoring activities.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline">View Calendar</Button>
-          <Button>Update Availability</Button>
+          <Button variant="outline" className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 text-primary"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            View Calendar
+          </Button>
+          <Button className="gap-2 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M12 20v-6M12 8V4" />
+              <path d="M15.5 13.5a3.5 3.5 0 1 0-7 0 3.5 3.5 0 0 0 7 0Z" />
+              <path d="M19.29 12.29a2.5 2.5 0 0 0-3.5-3.5" />
+              <path d="M4.71 12.29a2.5 2.5 0 0 1 3.5-3.5" />
+            </svg>
+            Update Availability
+          </Button>
         </div>
       </div>
 

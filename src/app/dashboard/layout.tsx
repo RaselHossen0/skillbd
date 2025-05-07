@@ -82,12 +82,12 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-40 border-b bg-background">
+        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm shadow-sm">
           <div className="container flex h-16 items-center justify-between py-4">
             <div className="flex items-center gap-2 md:gap-4">
               <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="md:hidden">
+                  <Button variant="outline" size="icon" className="md:hidden border-0 bg-transparent shadow-none hover:bg-muted">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -128,7 +128,7 @@ export default function DashboardLayout({
                         href={item.href}
                         className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                           pathname === item.href
-                            ? "bg-muted font-medium text-foreground"
+                            ? "bg-primary/10 font-medium text-primary"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                         onClick={() => setOpen(false)}
@@ -148,21 +148,22 @@ export default function DashboardLayout({
                   alt="SkillBridge BD Logo"
                   width={24}
                   height={24}
-                  className="h-6 w-6"
+                  className="h-8 w-8"
                 />
-                <span className="hidden font-bold md:inline-block">
+                <span className="hidden font-bold text-xl md:inline-block">
                   SkillBridge BD
                 </span>
               </Link>
-              <nav className="hidden md:flex md:gap-2 lg:gap-6">
+              <div className="h-6 w-px bg-muted mx-1 hidden md:block"></div>
+              <nav className="hidden md:flex md:gap-1 lg:gap-2">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`text-sm font-medium ${
+                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       pathname === item.href
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     {item.name}
@@ -172,7 +173,7 @@ export default function DashboardLayout({
             </div>
             <div className="flex items-center gap-4">
               <Link href="/dashboard/notifications">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="relative hover:bg-muted">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -189,22 +190,24 @@ export default function DashboardLayout({
                     <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                   </svg>
                   <span className="sr-only">Notifications</span>
+                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary"></span>
                 </Button>
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="h-6 w-px bg-muted hidden md:block"></div>
+              <div className="flex items-center gap-3">
                 <div className="hidden text-right md:block">
                   <p className="text-sm font-medium leading-none">
                     {user?.name || "User"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <Badge variant="outline" className="mt-1 text-xs font-normal bg-muted/30">
                     {user?.role || "Unknown"} Account
-                  </p>
+                  </Badge>
                 </div>
                 <div className="relative">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-full border"
+                    className="rounded-full border bg-background/80 hover:bg-muted"
                     onClick={handleLogout}
                   >
                     <Avatar>
@@ -212,7 +215,7 @@ export default function DashboardLayout({
                         src={user?.avatar_url || ""}
                         alt={user?.name || "User"}
                       />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
