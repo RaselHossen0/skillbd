@@ -95,10 +95,10 @@ export default function RegisterPage() {
             <div className="flex justify-center mb-4">
               <Image
                 src="/logo.svg"
-                alt="IndustryHuntBD BD Logo"
+                alt="IndustryHuntBD Logo"
                 width={64}
                 height={64}
-                className="h-16 w-16"
+                className="h-16 w-16 "
               />
             </div>
             <CardTitle className="text-2xl text-center">

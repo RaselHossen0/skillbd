@@ -113,12 +113,12 @@ export default function DashboardLayout({
                   >
                     <Image
                       src="/logo.svg"
-                      alt="IndustryHuntBD BD Logo"
+                      alt="IndustryHuntBD Logo"
                       width={24}
                       height={24}
-                      className="h-6 w-6"
+                      className="h-6 w-6 "
                     />
-                    <span className="font-bold">IndustryHuntBD BD</span>
+                    <span className="font-bold">IndustryHuntBD</span>
                   </Link>
                   <div className="grid gap-1 py-6 px-2">
                     {navItems.map((item) => (
@@ -141,7 +141,7 @@ export default function DashboardLayout({
               <Link href="/" className="flex items-center gap-2 font-semibold">
                 <Image
                   src="/logo.svg"
-                  alt="IndustryHuntBD BD Logo"
+                  alt="IndustryHuntBD Logo"
                   width={24}
                   height={24}
                   className="h-8 w-8 ml-4"

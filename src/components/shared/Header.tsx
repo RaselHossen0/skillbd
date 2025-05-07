@@ -19,9 +19,9 @@ const Header = () => {
             alt="IndustryHuntBD Logo"
             width={40}
             height={40}
-            className="h-8 w-8"
+            className="h-8 w-8 ml-4"
           />
-          <span className="text-xl font-bold">IndustryHuntBD BD</span>
+          <span className="text-xl font-bold">IndustryHuntBD</span>
         </Link>
 
         {!isAuthRoute && (
