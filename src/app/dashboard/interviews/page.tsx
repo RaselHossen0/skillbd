@@ -126,31 +126,89 @@ export default function InterviewsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Interviews</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mt-1.5">
           Manage your scheduled interviews and meetings
         </p>
       </div>
 
-      <Tabs defaultValue="upcoming" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="upcoming">
+      <Tabs defaultValue="upcoming" className="space-y-8">
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="upcoming" className="flex-1 md:flex-none">
             Upcoming ({upcomingSessions.length})
           </TabsTrigger>
-          <TabsTrigger value="completed">
+          <TabsTrigger value="completed" className="flex-1 md:flex-none">
             Completed ({completedSessions.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming" className="space-y-4">
+        <TabsContent value="upcoming" className="space-y-6">
           {upcomingSessions.length > 0 ? (
-            upcomingSessions.map((session) => renderSession(session))
+            upcomingSessions.map((session) => (
+              <Card key={session.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl">{session.title}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        {session.job?.title} - {session.job?.company_name}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        session.status === "SCHEDULED"
+                          ? "default"
+                          : session.status === "COMPLETED"
+                          ? "secondary"
+                          : "destructive"
+                      }
+                      className="w-fit"
+                    >
+                      {session.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        with {session.applicant_name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Badge variant="outline" className="px-3 py-1">
+                          {session.date}
+                        </Badge>
+                        <Badge variant="outline" className="px-3 py-1">
+                          {session.time}
+                        </Badge>
+                      </div>
+                    </div>
+                    {session.meeting_link && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="px-4"
+                        asChild
+                      >
+                        <a
+                          href={session.meeting_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Join Meeting
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
                   No upcoming interviews scheduled
                 </p>
               </CardContent>
@@ -158,13 +216,71 @@ export default function InterviewsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="completed" className="space-y-4">
+        <TabsContent value="completed" className="space-y-6">
           {completedSessions.length > 0 ? (
-            completedSessions.map((session) => renderSession(session))
+            completedSessions.map((session) => (
+              <Card key={session.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-xl">{session.title}</CardTitle>
+                      <CardDescription className="mt-1.5">
+                        {session.job?.title} - {session.job?.company_name}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant={
+                        session.status === "SCHEDULED"
+                          ? "default"
+                          : session.status === "COMPLETED"
+                          ? "secondary"
+                          : "destructive"
+                      }
+                      className="w-fit"
+                    >
+                      {session.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        with {session.applicant_name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Badge variant="outline" className="px-3 py-1">
+                          {session.date}
+                        </Badge>
+                        <Badge variant="outline" className="px-3 py-1">
+                          {session.time}
+                        </Badge>
+                      </div>
+                    </div>
+                    {session.meeting_link && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="px-4"
+                        asChild
+                      >
+                        <a
+                          href={session.meeting_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Recording
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <p className="text-muted-foreground text-center">
                   No completed interviews yet
                 </p>
               </CardContent>

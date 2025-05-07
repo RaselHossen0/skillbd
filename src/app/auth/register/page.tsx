@@ -96,7 +96,7 @@ export default function RegisterPage() {
             </div>
             <CardTitle className="text-2xl text-center">Create an account</CardTitle>
             <CardDescription className="text-center">
-              Join SkillBridge Bangladesh today
+              Join IndustryHunt Bangladesh today
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit(onSubmit)}>

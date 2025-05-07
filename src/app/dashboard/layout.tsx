@@ -30,7 +30,6 @@ export default function DashboardLayout({
     { name: "Skills", href: "/dashboard/skills" },
     { name: "Mentorship", href: "/dashboard/mentorship" },
     { name: "Portfolio", href: "/dashboard/portfolio" },
-    { name: "Messages", href: "/dashboard/messages" },
   ];
 
   const mentorNavItems = [
@@ -82,11 +81,16 @@ export default function DashboardLayout({
     <ProtectedRoute>
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm shadow-sm">
-          <div className="container flex h-16 items-center justify-between py-4">
-            <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex h-16 items-center px-4 md:px-6 lg:px-8 w-full">
+            {/* Left: Logo and Navigation */}
+            <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
               <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="md:hidden border-0 bg-transparent shadow-none hover:bg-muted">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="md:hidden border-0 bg-transparent shadow-none hover:bg-muted"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -109,7 +113,7 @@ export default function DashboardLayout({
                 <SheetContent side="left" className="pr-0">
                   <Link
                     href="/"
-                    className="flex items-center gap-2 font-semibold"
+                    className="flex items-center gap-2 font-semibold px-4 py-2"
                   >
                     <Image
                       src="/logo.svg"
@@ -120,12 +124,12 @@ export default function DashboardLayout({
                     />
                     <span className="font-bold">SkillBridge BD</span>
                   </Link>
-                  <div className="grid gap-2 py-6">
+                  <div className="grid gap-1 py-6 px-2">
                     {navItems.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                        className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                           pathname === item.href
                             ? "bg-primary/10 font-medium text-primary"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -144,19 +148,19 @@ export default function DashboardLayout({
                   alt="SkillBridge BD Logo"
                   width={24}
                   height={24}
-                  className="h-8 w-8"
+                  className="h-8 w-8 ml-4"
                 />
                 <span className="hidden font-bold text-xl md:inline-block">
-                  SkillBridge BD
+                  IndustryHuntBD
                 </span>
               </Link>
-              <div className="h-6 w-px bg-muted mx-1 hidden md:block"></div>
+              <div className="h-6 w-px bg-muted mx-2 hidden md:block"></div>
               <nav className="hidden md:flex md:gap-1 lg:gap-2">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
                       pathname === item.href
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -167,9 +171,16 @@ export default function DashboardLayout({
                 ))}
               </nav>
             </div>
-            <div className="flex items-center gap-4">
+            {/* Spacer to push profile info right */}
+            <div className="flex-1" />
+            {/* Right: Profile Info */}
+            <div className="flex items-center gap-4 flex-shrink-0">
               <Link href="/dashboard/notifications">
-                <Button variant="ghost" size="icon" className="relative hover:bg-muted">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative hover:bg-muted"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -195,7 +206,10 @@ export default function DashboardLayout({
                   <p className="text-sm font-medium leading-none">
                     {user?.name || "User"}
                   </p>
-                  <Badge variant="outline" className="mt-1 text-xs font-normal bg-muted/30">
+                  <Badge
+                    variant="outline"
+                    className="mt-1 text-xs font-normal bg-muted/30"
+                  >
                     {user?.role || "Unknown"} Account
                   </Badge>
                 </div>
@@ -221,13 +235,15 @@ export default function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className="flex-1">{children}</main>
-        <footer className="py-6 md:px-8 md:py-0">
+        <main className="flex-1 px-4 md:px-6 lg:px-8 py-6 md:py-8 lg:py-10">
+          {children}
+        </main>
+        <footer className="border-t py-6 md:px-8 md:py-8">
           <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
             <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
               © 2023 SkillBridge Bangladesh. All rights reserved.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <Link
                 href="/terms"
                 className="text-sm text-muted-foreground underline-offset-4 hover:underline"
