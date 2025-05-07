@@ -23,6 +23,15 @@ export default function PortfolioPage() {
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
 
+  // Mock stats data
+  const stats = {
+    skills_count: 5,
+    projects_count: 3,
+    courses_count: 2,
+    sessions_count: 8,
+    applications_count: 12,
+  };
+
   // Mock data for skills and projects
   const mockSkills = [
     { name: "JavaScript", level: 4, category: "Programming", verified: true },
@@ -197,6 +206,40 @@ export default function PortfolioPage() {
               <div className="mt-6">
                 <h4 className="font-medium mb-2">About Me</h4>
                 <p className="text-muted-foreground">{profile.bio}</p>
+              </div>
+
+              {/* Stats Section */}
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="p-4 border rounded-lg text-center">
+                  <div className="text-2xl font-bold">{stats.skills_count}</div>
+                  <div className="text-sm text-muted-foreground">Skills</div>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {stats.projects_count}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Projects</div>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {stats.courses_count}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Courses</div>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {stats.sessions_count}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Sessions</div>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <div className="text-2xl font-bold">
+                    {stats.applications_count}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Applications
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
