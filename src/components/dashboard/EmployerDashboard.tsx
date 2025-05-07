@@ -95,12 +95,14 @@ interface EmployerDashboardProps {
 }
 
 export default function EmployerDashboard({ user }: EmployerDashboardProps) {
-  const [stats, setStats] = useState<DashboardStats>({
-    jobs_count: 0,
-    applications_count: 0,
-    projects_count: 0,
-    active_contracts: 0,
-  });
+
+  const stats = {
+    jobs_count: 10,
+    applications_count: 3,
+    projects_count: 12,
+    active_contracts: 2,
+  }
+  
   const [jobs, setJobs] = useState<Job[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -144,7 +146,7 @@ export default function EmployerDashboard({ user }: EmployerDashboardProps) {
         const sessionsData = await sessionsResponse.json();
 
         // Set initial data
-        setStats(statsData);
+        
         setActivities(activitiesData.activities || []);
         setSessions(sessionsData.sessions || []);
 
