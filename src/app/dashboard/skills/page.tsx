@@ -27,6 +27,15 @@ import { Progress } from "@/components/ui/progress";
 import { BookOpen, Award, CheckCircle, XCircle, Clock } from "lucide-react";
 import Replicate from "replicate";
 import { supabase } from "@/lib/supabase";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Question {
   question: string;
@@ -78,6 +87,13 @@ export default function SkillsPage() {
   const [error, setError] = useState<string | null>(null);
   const [mySkills, setMySkills] = useState<any[]>([]);
   const [availableSkills, setAvailableSkills] = useState<any[]>([]);
+  const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
+  const [customAssessment, setCustomAssessment] = useState({
+    topic: "",
+    description: "",
+    questionCount: 5,
+    difficulty: "medium",
+  });
 
   const replicate = new Replicate({
     auth: process.env.NEXT_PUBLIC_REPLICATE_API_TOKEN,
@@ -302,6 +318,51 @@ export default function SkillsPage() {
     return "bg-red-500";
   };
 
+  // Add new function to handle custom assessment creation
+  const handleCreateCustomAssessment = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/generate-questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          skill: customAssessment.topic,
+          questionCount: customAssessment.questionCount,
+          description: customAssessment.description,
+          difficulty: customAssessment.difficulty,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate questions");
+      }
+
+      if (!data.questions || !Array.isArray(data.questions)) {
+        throw new Error("Invalid response format from server");
+      }
+
+      setGeneratedQuestions(data.questions);
+      setActiveQuizSkill(customAssessment.topic);
+      setCurrentQuestion(0);
+      setAnswers([]);
+      setQuizCompleted(false);
+      setIsAnswerCorrect(null);
+      setIsCreatingAssessment(false);
+    } catch (error) {
+      console.error("Error creating custom assessment:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to create assessment"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-8">
@@ -486,6 +547,119 @@ export default function SkillsPage() {
                 ))}
               </div>
             </CardContent>
+          </Card>
+
+          {/* Create Custom Assessment */}
+          <Card className="shadow-sm mt-8">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl mb-2">
+                Create Custom Assessment
+              </CardTitle>
+              <CardDescription className="text-base">
+                Create your own assessment topic and generate AI-powered
+                questions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="space-y-6">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="topic">Assessment Topic</Label>
+                    <Input
+                      id="topic"
+                      placeholder="e.g., Advanced React Hooks, System Design Patterns"
+                      value={customAssessment.topic}
+                      onChange={(e) =>
+                        setCustomAssessment({
+                          ...customAssessment,
+                          topic: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">
+                      Topic Description (Optional)
+                    </Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Provide more context about the topic to generate better questions"
+                      value={customAssessment.description}
+                      onChange={(e) =>
+                        setCustomAssessment({
+                          ...customAssessment,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="questionCount">Number of Questions</Label>
+                      <Select
+                        value={customAssessment.questionCount.toString()}
+                        onValueChange={(value) =>
+                          setCustomAssessment({
+                            ...customAssessment,
+                            questionCount: parseInt(value),
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select count" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5 Questions</SelectItem>
+                          <SelectItem value="10">10 Questions</SelectItem>
+                          <SelectItem value="15">15 Questions</SelectItem>
+                          <SelectItem value="20">20 Questions</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="difficulty">Difficulty Level</Label>
+                      <Select
+                        value={customAssessment.difficulty}
+                        onValueChange={(value) =>
+                          setCustomAssessment({
+                            ...customAssessment,
+                            difficulty: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select difficulty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="easy">Easy</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="difficult">Difficult</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="pt-2 pb-6 px-6">
+              <Button
+                className="w-full py-5 text-base"
+                onClick={handleCreateCustomAssessment}
+                disabled={!customAssessment.topic || isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Generating Questions...
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    Create Assessment
+                  </>
+                )}
+              </Button>
+            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
