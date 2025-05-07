@@ -1,15 +1,54 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+
+// Animation utility for fade-in effect
+const FadeIn = ({ children, delay = 0, className = "" }) => {
+  return (
+    <div 
+      className={`opacity-0 animate-fadeIn ${className}`} 
+      style={{ animationDelay: `${delay}ms`, animationFillMode: "forwards" }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// Typing animation component
+const TypedText = ({ text, speed = 100 }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, speed]);
+  
+  return (
+    <span className="relative">
+      {displayText}
+      <span className="absolute right-[-4px] top-0 h-full w-[3px] bg-primary animate-cursor"></span>
+    </span>
+  );
+};
 
 export default function Home() {
+  "use client";
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Navbar */}
       <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2 ">
-            <Image src="/logo.svg" alt="IndustryHunt Logo" width={40} height={40} className="h-8 w-8 ml-4" />
+            <Image src="/logo.svg" alt="IndustryHunt Logo" width={40} height={40} className="h-8 w-8 ml-4 animate-float" />
             <span className="text-xl font-bold">IndustryHuntBD</span>
           </div>
           <div className="flex items-center gap-4">
@@ -24,18 +63,18 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="container flex flex-col items-center justify-center gap-6 pt-16 pb-8 md:pt-24 md:pb-12 lg:pt-32 lg:pb-16">
-        <div className="flex max-w-[980px] flex-col items-center gap-4 text-center">
+      <section className="container flex flex-col items-center justify-center gap-6 pt-16 pb-8 md:pt-24 md:pb-12 lg:pt-32 lg:pb-16 overflow-hidden">
+        <div className="flex max-w-[980px] flex-col items-center gap-4 text-center animate-slideUp">
           <h1 className="text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl">
-            Connect, Learn, and Grow with <br />
-            <span className="text-primary">IndustryHunt Bangladesh</span>
+            <TypedText text="Connect, Learn, and Grow with" speed={50} /><br />
+            <span className="text-primary animate-pulse">IndustryHunt Bangladesh</span>
           </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground sm:text-xl">
             Bridging the gap between education and employment by connecting students 
             with real-world projects and industry mentors.
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 animate-fadeIn" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>
           <Link href="/auth/register?role=student">
             <Button size="lg">I'm a Student</Button>
           </Link>
@@ -61,7 +100,8 @@ export default function Home() {
 
         <div className="grid gap-8 md:grid-cols-3">
           {/* For Students */}
-          <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
+          <FadeIn delay={200} className="transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+            <div className="flex flex-col items-center space-y-4 rounded-lg border p-6 h-full">
             <div className="rounded-full bg-primary/10 p-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
                 <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
@@ -99,10 +139,12 @@ export default function Home() {
                 Digital Portfolio
               </li>
             </ul>
-          </div>
+            </div>
+          </FadeIn>
 
           {/* For Mentors */}
-          <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
+          <FadeIn delay={400} className="transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+            <div className="flex flex-col items-center space-y-4 rounded-lg border p-6 h-full">
             <div className="rounded-full bg-primary/10 p-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -141,10 +183,12 @@ export default function Home() {
                 Community Forum
               </li>
             </ul>
-          </div>
+            </div>
+          </FadeIn>
 
           {/* For Employers */}
-          <div className="flex flex-col items-center space-y-4 rounded-lg border p-6">
+          <FadeIn delay={600} className="transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+            <div className="flex flex-col items-center space-y-4 rounded-lg border p-6 h-full">
             <div className="rounded-full bg-primary/10 p-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary">
                 <path d="M20 7h-9"></path>
@@ -184,13 +228,15 @@ export default function Home() {
                 Hire Top Talent
           </li>
             </ul>
-          </div>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className=" py-16">
-        <div className="container flex flex-col items-center justify-center gap-6 text-center">
+      <section className="py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent animate-gradientBg"></div>
+        <div className="container flex flex-col items-center justify-center gap-6 text-center relative z-10 animate-fadeIn" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
           <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
             Take Your Career to the Next Level
           </h2>

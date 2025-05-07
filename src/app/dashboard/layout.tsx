@@ -79,8 +79,8 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm shadow-sm">
-          <div className="flex h-16 items-center px-4 md:px-6 lg:px-8 w-full">
+        <header className="sticky top-0 z-40 border-b border-accent/10 bg-background/60 backdrop-blur-md shadow-md supports-[backdrop-filter]:bg-background/30 before:absolute before:inset-0 before:bg-gradient-to-r before:from-primary/5 before:via-accent/5 before:to-primary/5 before:pointer-events-none">
+          <div className="flex h-16 items-center px-4 md:px-6 lg:px-8 w-full relative">
             {/* Left: Logo and Navigation */}
             <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
               <Sheet open={open} onOpenChange={setOpen}>
@@ -88,7 +88,7 @@ export default function DashboardLayout({
                   <Button
                     variant="outline"
                     size="icon"
-                    className="md:hidden border-0 bg-transparent shadow-none hover:bg-muted"
+                    className="md:hidden border-0 bg-transparent shadow-none hover:bg-accent/10"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -153,7 +153,7 @@ export default function DashboardLayout({
                   IndustryHuntBD
                 </span>
               </Link>
-              <div className="h-6 w-px bg-muted mx-2 hidden md:block"></div>
+              <div className="h-6 w-px bg-accent/20 mx-2 hidden md:block"></div>
               <nav className="hidden md:flex md:gap-1 lg:gap-2">
                 {navItems.map((item) => (
                   <Link
@@ -161,8 +161,8 @@ export default function DashboardLayout({
                     href={item.href}
                     className={`rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
                       pathname === item.href
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-primary/15 text-primary backdrop-blur-sm border border-primary/10 shadow-sm"
+                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground hover:backdrop-blur-sm hover:border hover:border-accent/10"
                     }`}
                   >
                     {item.name}
@@ -178,7 +178,7 @@ export default function DashboardLayout({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative hover:bg-muted"
+                  className="relative hover:bg-accent/10 backdrop-blur-sm border border-transparent hover:border-accent/20 shadow-sm"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -199,7 +199,7 @@ export default function DashboardLayout({
                   <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary"></span>
                 </Button>
               </Link>
-              <div className="h-6 w-px bg-muted hidden md:block"></div>
+              <div className="h-6 w-px bg-accent/20 hidden md:block"></div>
               <div className="flex items-center gap-3">
                 <div className="hidden text-right md:block">
                   <p className="text-sm font-medium leading-none">
@@ -207,7 +207,7 @@ export default function DashboardLayout({
                   </p>
                   <Badge
                     variant="outline"
-                    className="mt-1 text-xs font-normal bg-muted/30"
+                    className="mt-1 text-xs font-normal bg-accent/10 backdrop-blur-sm border border-accent/20 shadow-sm"
                   >
                     {user?.role || "Unknown"} Account
                   </Badge>
@@ -216,7 +216,7 @@ export default function DashboardLayout({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-full border bg-background/80 hover:bg-muted"
+                    className="rounded-full border border-accent/20 bg-background/40 hover:bg-accent/10 backdrop-blur-sm shadow-sm"
                     onClick={handleLogout}
                   >
                     <Avatar>
@@ -224,7 +224,7 @@ export default function DashboardLayout({
                         src={user?.avatar_url || ""}
                         alt={user?.name || "User"}
                       />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      <AvatarFallback className="bg-primary/15 text-primary font-semibold backdrop-blur-sm border border-primary/10">
                         {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>

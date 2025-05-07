@@ -452,10 +452,8 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline">Download CV</Button>
-          <Button variant="outline" asChild>
-            <Link href="/jobs">Browse Jobs</Link>
-          </Button>
-          <Button>Complete Profile</Button>
+         
+         
         </div>
       </div>
 
