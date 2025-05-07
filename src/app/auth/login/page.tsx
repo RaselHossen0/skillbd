@@ -24,7 +24,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -35,15 +37,19 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isEmailUnconfirmed, setIsEmailUnconfirmed] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState("");
-  
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
   });
 
   useEffect(() => {
     // Redirect if already logged in
     if (user) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [user, router]);
 
@@ -56,13 +62,15 @@ export default function LoginPage() {
         password: data.password,
       });
     } catch (error: any) {
-      console.error('Login page error:', error);
-      
+      console.error("Login page error:", error);
+
       // Check if this is an email confirmation issue
       if (error.message === "Email not confirmed") {
         setIsEmailUnconfirmed(true);
         setUnconfirmedEmail(data.email);
-        setLoginError("Please check your email for a confirmation link before logging in.");
+        setLoginError(
+          "Please check your email for a confirmation link before logging in."
+        );
       } else {
         setLoginError(error.message || "Failed to login");
       }
@@ -71,24 +79,24 @@ export default function LoginPage() {
 
   const handleResendConfirmation = async () => {
     if (!unconfirmedEmail) return;
-    
+
     try {
       // You'll need to create this endpoint in your API
-      const response = await fetch('/api/auth/resend-confirmation', {
-        method: 'POST',
+      const response = await fetch("/api/auth/resend-confirmation", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email: unconfirmedEmail }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         setLoginError(data.error || "Failed to resend confirmation email");
         return;
       }
-      
+
       setLoginError("Confirmation email sent! Please check your inbox.");
     } catch (error: any) {
       setLoginError(error.message || "Failed to resend confirmation email");
@@ -104,10 +112,10 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
               <Image
                 src="/logo.svg"
-                alt="SkillBridge BD Logo"
+                alt="IndustryHuntBD Logo"
                 width={64}
                 height={64}
-                className="h-16 w-16"
+                className="h-16 w-16 "
               />
             </div>
             <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
@@ -157,13 +165,15 @@ export default function LoginPage() {
                     Forgot password?
                   </Link>
                 </div>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   {...register("password")}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
@@ -219,4 +229,4 @@ export default function LoginPage() {
       </main>
     </div>
   );
-} 
+}

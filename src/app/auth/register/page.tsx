@@ -29,7 +29,9 @@ type RegisterRole = "STUDENT" | "MENTOR" | "EMPLOYER";
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
   role: z.enum(["STUDENT", "MENTOR", "EMPLOYER"] as const),
 });
 
@@ -39,29 +41,34 @@ export default function RegisterPage() {
   const { user, register: registerUser, loading, error } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Get role from URL and validate it's one of our allowed roles
   const initialRole = (() => {
-    const param = searchParams.get('role')?.toUpperCase();
+    const param = searchParams.get("role")?.toUpperCase();
     if (param === "STUDENT" || param === "MENTOR" || param === "EMPLOYER") {
       return param;
     }
     return "STUDENT";
   })() as RegisterRole;
-  
+
   const [registerError, setRegisterError] = useState<string | null>(null);
-  
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       role: initialRole,
-    }
+    },
   });
 
   useEffect(() => {
     // Redirect if already logged in
     if (user) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [user, router]);
 
@@ -88,13 +95,15 @@ export default function RegisterPage() {
             <div className="flex justify-center mb-4">
               <Image
                 src="/logo.svg"
-                alt="SkillBridge BD Logo"
+                alt="IndustryHuntBD Logo"
                 width={64}
                 height={64}
-                className="h-16 w-16"
+                className="h-16 w-16 "
               />
             </div>
-            <CardTitle className="text-2xl text-center">Create an account</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              Create an account
+            </CardTitle>
             <CardDescription className="text-center">
               Join IndustryHunt Bangladesh today
             </CardDescription>
@@ -103,27 +112,21 @@ export default function RegisterPage() {
             <CardContent className="space-y-4">
               {(registerError || error) && (
                 <Alert variant="destructive">
-                  <AlertDescription>
-                    {registerError || error}
-                  </AlertDescription>
+                  <AlertDescription>{registerError || error}</AlertDescription>
                 </Alert>
               )}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="John Doe" 
-                  {...register("name")}
-                />
+                <Input id="name" placeholder="John Doe" {...register("name")} />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name.message}</p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  placeholder="m@example.com" 
+                <Input
+                  id="email"
+                  placeholder="m@example.com"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -132,21 +135,25 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   {...register("password")}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>I'm joining as</Label>
-                <RadioGroup 
+                <RadioGroup
                   className="flex flex-col space-y-2 mt-2"
                   defaultValue={initialRole}
-                  onValueChange={(value: RegisterRole) => setValue('role', value)}
+                  onValueChange={(value: RegisterRole) =>
+                    setValue("role", value)
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="STUDENT" id="student" />
@@ -170,11 +177,17 @@ export default function RegisterPage() {
               </Button>
               <div className="text-xs text-center text-muted-foreground">
                 By clicking "Create Account", you agree to our{" "}
-                <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
+                <Link
+                  href="/terms"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
+                <Link
+                  href="/privacy"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
                   Privacy Policy
                 </Link>
                 .
@@ -196,4 +209,4 @@ export default function RegisterPage() {
       </main>
     </div>
   );
-} 
+}
