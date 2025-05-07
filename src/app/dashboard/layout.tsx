@@ -38,8 +38,6 @@ export default function DashboardLayout({
     { name: "Sessions", href: "/dashboard/sessions" },
     { name: "Students", href: "/dashboard/students" },
     { name: "Projects", href: "/dashboard/projects" },
-    { name: "Calendar", href: "/dashboard/calendar" },
-    { name: "Messages", href: "/dashboard/messages" },
   ];
 
   const employerNavItems = [
@@ -48,8 +46,6 @@ export default function DashboardLayout({
     { name: "Applications", href: "/dashboard/applications" },
     { name: "Interviews", href: "/dashboard/interviews" },
     { name: "Projects", href: "/dashboard/projects" },
-    { name: "Talent Pool", href: "/dashboard/talent" },
-    { name: "Messages", href: "/dashboard/messages" },
   ];
 
   // Select navigation items based on user role
@@ -117,12 +113,12 @@ export default function DashboardLayout({
                   >
                     <Image
                       src="/logo.svg"
-                      alt="SkillBridge BD Logo"
+                      alt="IndustryHuntBD BD Logo"
                       width={24}
                       height={24}
                       className="h-6 w-6"
                     />
-                    <span className="font-bold">SkillBridge BD</span>
+                    <span className="font-bold">IndustryHuntBD BD</span>
                   </Link>
                   <div className="grid gap-1 py-6 px-2">
                     {navItems.map((item) => (
@@ -145,7 +141,7 @@ export default function DashboardLayout({
               <Link href="/" className="flex items-center gap-2 font-semibold">
                 <Image
                   src="/logo.svg"
-                  alt="SkillBridge BD Logo"
+                  alt="IndustryHuntBD BD Logo"
                   width={24}
                   height={24}
                   className="h-8 w-8 ml-4"
@@ -241,7 +237,7 @@ export default function DashboardLayout({
         <footer className="border-t py-6 md:px-8 md:py-8">
           <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
             <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-              © 2023 SkillBridge Bangladesh. All rights reserved.
+              © 2023 IndustryHuntBD Bangladesh. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link

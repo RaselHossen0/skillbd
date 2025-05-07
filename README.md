@@ -1,10 +1,11 @@
-# SkillBridge Bangladesh
+# IndustryHuntBD Bangladesh
 
-SkillBridge Bangladesh is a platform designed to bridge the gap between education and employment by connecting students with real-world projects and industry mentors in Bangladesh.
+IndustryHuntBD Bangladesh is a platform designed to bridge the gap between education and employment by connecting students with real-world projects and industry mentors in Bangladesh.
 
 ## Features
 
 ### Student Features
+
 - **Skill Assessment Quiz** - Personalized learning path based on skills
 - **Project Marketplace** - Apply for real-world tasks (paid/unpaid)
 - **Micro-Courses** - Certifications from industry partners
@@ -13,12 +14,14 @@ SkillBridge Bangladesh is a platform designed to bridge the gap between educatio
 - **Job Matcher** - AI-recommended entry-level roles
 
 ### Mentor Features
+
 - **Profile Builder** - List expertise and experience
 - **Mentorship Scheduler** - Set availability for sessions
 - **Project Reviewer** - Grade student submissions, give feedback
 - **Community Forum** - Answer Q&A, host AMAs
 
 ### Employer Features
+
 - **Post Challenges** - Define tasks for students
 - **Talent Pool Access** - Filter students by skills, project history
 - **Certification Verification** - Check badges
@@ -35,23 +38,27 @@ SkillBridge Bangladesh is a platform designed to bridge the gap between educatio
 ## Implemented Features
 
 ### Authentication System
+
 - **Role-based Authentication** - Student, Mentor, and Employer roles
 - **Protected Routes** - Access control based on user roles
 - **Authentication Context** - Global auth state management
 - **User Profiles** - Role-specific user profiles and data
 
 ### Dashboard System
+
 - **Role-specific Dashboards** - Tailored views for different user types
 - **Dashboard Stats** - User-specific metrics and analytics
 - **Activity Tracking** - Recent user activities display
 - **Dynamic Navigation** - Role-based navigation menus
 
 ### Skills Assessment Module
+
 - **Skill Quizzes** - Interactive skill assessment
 - **Skill Ratings** - Skill level tracking and verification
 - **Skill Recommendations** - Personalized skill suggestions
 
 ### Portfolio Generator
+
 - **Project Showcase** - Display completed projects
 - **Skill Display** - Visualize skill ratings and verifications
 - **Portfolio Customization** - User-controlled profile visibility
@@ -62,6 +69,7 @@ SkillBridge Bangladesh is a platform designed to bridge the gap between educatio
 The platform implements the following key APIs:
 
 ### Authentication Services
+
 - `signUp` - Register new users with role-specific profiles
 - `signIn` - Authenticate users with email/password
 - `signOut` - Log users out of the platform
@@ -69,6 +77,7 @@ The platform implements the following key APIs:
 - `resetPassword` - Handle password reset flows
 
 ### Dashboard Services
+
 - `getDashboardStats` - Fetch user-specific dashboard metrics
 - `getStudentSkills` - Retrieve skills for student profiles
 - `getRecommendedProjects` - Get projects matching student skills
@@ -79,6 +88,7 @@ The platform implements the following key APIs:
 ## Local Development
 
 ### Prerequisites
+
 - Node.js (v20 or later)
 - npm/yarn
 - PostgreSQL database
@@ -86,18 +96,21 @@ The platform implements the following key APIs:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/skillbd.git
 cd skillbd
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
-Create a `.env` file in the root directory with the following variables:
+   Create a `.env` file in the root directory with the following variables:
+
 ```
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -106,12 +119,14 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 4. Initialize the database:
+
 ```bash
 # Run the migration script in Supabase SQL Editor
 # Copy and paste the contents of migrations/supabase_schema.sql
 ```
 
 5. Start the development server:
+
 ```bash
 npm run dev
 ```
