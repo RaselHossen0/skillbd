@@ -314,109 +314,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
       </Card>
     );
   };
-  
-  // Mock data for fallback when API data is not available
-  const mockSkills = [
-    { id: '1', skill: { id: '1', name: 'JavaScript', category: 'Programming' }, level: 4, verified: true },
-    { id: '2', skill: { id: '2', name: 'React.js', category: 'Frontend' }, level: 3, verified: true },
-    { id: '3', skill: { id: '3', name: 'Node.js', category: 'Backend' }, level: 3, verified: false },
-    { id: '4', skill: { id: '4', name: 'UI/UX Design', category: 'Design' }, level: 4, verified: true },
-    { id: '5', skill: { id: '5', name: 'MongoDB', category: 'Database' }, level: 2, verified: false },
-  ];
-  
-  const mockProjects = [
-    {
-      id: 1,
-      title: "Shopify Website for Local Boutique",
-      company: "Fashion Forward BD",
-      budget: "$300",
-      deadline: "2 weeks",
-      skills: ["Shopify", "HTML/CSS", "JavaScript"],
-    },
-    {
-      id: 2,
-      title: "Social Media Dashboard UI Design",
-      company: "TechVision Ltd",
-      budget: "$250",
-      deadline: "1 week",
-      skills: ["UI/UX", "Figma", "Adobe XD"],
-    },
-    {
-      id: 3,
-      title: "API Development for Inventory Management",
-      company: "Retail Solutions BD",
-      budget: "$400",
-      deadline: "3 weeks",
-      skills: ["Node.js", "Express", "MongoDB"],
-    },
-  ];
-  
-  const mockActivities = [
-    {
-      id: 1,
-      type: "PROJECT_SUBMISSION",
-      title: "E-commerce Website UI Design",
-      date: "2 days ago",
-      status: "COMPLETED",
-    },
-    {
-      id: 2,
-      type: "COURSE_PROGRESS",
-      title: "React.js Fundamentals",
-      date: "5 days ago",
-      progress: 65,
-    },
-    {
-      id: 3,
-      type: "MENTORSHIP_SESSION",
-      title: "Career Guidance with Sarah",
-      date: "1 week ago",
-      status: "COMPLETED",
-    },
-    {
-      id: 4,
-      type: "PROJECT_APPLICATION",
-      title: "Mobile App Development for Local Business",
-      date: "2 weeks ago",
-      status: "PENDING",
-    },
-  ];
-  
-  const mockSessions = [
-    {
-      id: 1,
-      title: "Career Guidance Session",
-      mentor_name: "John Doe",
-      date: "Tomorrow",
-      time: "10:00 AM",
-      status: "SCHEDULED",
-      zoom_link: "https://zoom.us/j/123456789"
-    },
-    {
-      id: 2,
-      title: "React Project Review",
-      mentor_name: "Jane Smith",
-      date: "Thursday",
-      time: "2:00 PM",
-      status: "SCHEDULED",
-      zoom_link: "https://zoom.us/j/987654321"
-    },
-    {
-      id: 3,
-      title: "Interview Preparation",
-      mentor_name: "Alex Johnson",
-      date: "Friday",
-      time: "11:30 AM",
-      status: "SCHEDULED",
-      zoom_link: "https://zoom.us/j/567891234"
-    }
-  ];
-
-  // Use real data if available, otherwise fall back to mock data
-  const displaySkills = skills.length > 0 ? skills : mockSkills;
-  const displayProjects = projects.length > 0 ? projects : mockProjects;
-  const displayActivities = activities.length > 0 ? activities : mockActivities;
-  const displaySessions = sessions.length > 0 ? sessions : mockSessions;
 
   // Render a session item with actions
   const renderSessionWithActions = (session: any) => {
@@ -625,7 +522,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {displaySkills.slice(0, 5).map((skill, index) => renderSkill(skill, index))}
+              {skills.slice(0, 5).map((skill, index) => renderSkill(skill, index))}
             </div>
           </CardContent>
         </Card>
@@ -638,7 +535,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {displayActivities.map((activity) => (
+              {activities.map((activity) => (
                 <div key={activity.id} className="flex items-center p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
                   <div className="space-y-1 w-full">
                     <p className="text-sm font-medium leading-none">
@@ -691,10 +588,11 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {displaySessions.map(session => renderSessionWithActions(session))}
-            {displaySessions.length === 0 && (
-              <div className="text-center py-6 text-muted-foreground">
-                No upcoming sessions. Book a session with a mentor to get started.
+            {sessions.length > 0 ? (
+              sessions.map((session) => renderSessionWithActions(session))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">No upcoming sessions. Book one now!</p>
               </div>
             )}
           </div>
@@ -708,8 +606,17 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           <CardDescription>Based on your skills and interests</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {displayProjects.map(project => renderProject(project))}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projects.length > 0 ? (
+              projects.slice(0, 3).map((project) => renderProject(project))
+            ) : (
+              <div className="col-span-full text-center py-4">
+                <p className="text-muted-foreground">No projects available. Check the marketplace for opportunities!</p>
+                <Button variant="outline" className="mt-2" asChild>
+                  <Link href="/dashboard/marketplace">Browse Marketplace</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, Award, CheckCircle, XCircle, Clock } from "lucide-react";
 import Replicate from "replicate";
+import { supabase } from "@/lib/supabase";
 
 interface Question {
   question: string;
@@ -42,59 +43,72 @@ export default function SkillsPage() {
   const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mySkills, setMySkills] = useState<any[]>([]);
+  const [availableSkills, setAvailableSkills] = useState<any[]>([]);
 
   const replicate = new Replicate({
     auth: process.env.NEXT_PUBLIC_REPLICATE_API_TOKEN,
   });
 
-  // Mock data for existing skills
-  const mySkills = [
-    { name: "JavaScript", level: 4, category: "Programming", verified: true },
-    { name: "React.js", level: 3, category: "Frontend", verified: true },
-    { name: "Node.js", level: 3, category: "Backend", verified: false },
-    { name: "UI/UX Design", level: 4, category: "Design", verified: true },
-    { name: "MongoDB", level: 2, category: "Database", verified: false },
-  ];
-
-  // Mock data for available skill assessments
-  const availableSkills = [
-    {
-      name: "TypeScript",
-      category: "Programming",
-      questions: 10,
-      level: "medium",
-    },
-    {
-      name: "Next.js",
-      category: "Frontend",
-      questions: 12,
-      level: "difficult",
-    },
-    {
-      name: "Python",
-      category: "Programming",
-      questions: 15,
-      level: "easy",
-    },
-    {
-      name: "Data Structures",
-      category: "Computer Science",
-      questions: 15,
-      level: "difficult",
-    },
-    {
-      name: "PostgreSQL",
-      category: "Database",
-      questions: 10,
-      level: "medium",
-    },
-    {
-      name: "DevOps",
-      category: "Infrastructure",
-      questions: 12,
-      level: "difficult",
-    },
-  ];
+  // Add a useEffect to fetch the real skills data
+  useEffect(() => {
+    async function fetchSkills() {
+      try {
+        // Get current user info
+        const { data: userSession } = await supabase.auth.getSession();
+        const userId = userSession?.session?.user?.id;
+        
+        if (!userId) {
+          console.error('User not authenticated');
+          return;
+        }
+        
+        // Fetch user's existing skills
+        const { data: skillsData, error: skillsError } = await supabase
+          .from('user_skills')
+          .select(`
+            id,
+            level,
+            verified,
+            skills (
+              id,
+              name,
+              category
+            )
+          `)
+          .eq('user_id', userId);
+          
+        if (skillsError) {
+          console.error('Error fetching skills:', skillsError);
+        } else {
+          setMySkills(skillsData || []);
+        }
+        
+        // Fetch available skills for assessment
+        const { data: availableData, error: availableError } = await supabase
+          .from('skills')
+          .select('*')
+          .not('id', 'in', (skillsData || []).map((s: any) => s.skills.id).join(','));
+          
+        if (availableError) {
+          console.error('Error fetching available skills:', availableError);
+        } else {
+          // Format the available skills data
+          const formattedAvailable = (availableData || []).map((skill: any) => ({
+            name: skill.name,
+            category: skill.category,
+            questions: 10, // Default value
+            level: 'medium' // Default value
+          }));
+          setAvailableSkills(formattedAvailable);
+        }
+      } catch (error) {
+        console.error('Error in fetchSkills:', error);
+      }
+    }
+    
+    fetchSkills();
+  }, []);
 
   // Calculate duration based on question count and difficulty
   const calculateDuration = (questions: number, level: string) => {
