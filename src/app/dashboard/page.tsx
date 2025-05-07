@@ -301,7 +301,7 @@ export default function DashboardPage() {
               <span className="font-medium">{deadline}</span>
             </div>
             <div className="flex flex-wrap gap-1 pt-2">
-              {projectSkills.map((skill, index) => {
+              {projectSkills.map((skill: string | any, index: number) => {
                 // Handle different skill types
                 const skillName = typeof skill === 'string' 
                   ? skill 
@@ -324,7 +324,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="w-full px-4 py-6 md:px-6 lg:px-8 space-y-8">
       {successMessage && (
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle className="h-4 w-4 text-green-600" />
@@ -333,15 +333,15 @@ export default function DashboardPage() {
         </Alert>
       )}
       
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground mt-1">
               Welcome back, {user?.name || "User"}! Here's an overview of your progress.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {user?.role === 'STUDENT' && (
               <>
                 <Button variant="outline">Download CV</Button>
@@ -364,7 +364,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -489,7 +489,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           {/* Top Skills */}
           {user?.role === 'STUDENT' && (
             <Card className="md:col-span-2 lg:col-span-3">
@@ -585,29 +585,32 @@ export default function DashboardPage() {
               <CardDescription>Your latest interactions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {displayActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-center">
-                    <div className="space-y-1">
+                  <div key={activity.id} className="flex items-center p-3 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors">
+                    <div className="space-y-1 w-full">
                       <p className="text-sm font-medium leading-none">
                         {activity.title}
                       </p>
-                      <div className="flex items-center pt-2">
-                        {activity.type === "PROJECT_SUBMISSION" && (
-                          <Badge className="mr-2 bg-green-500 hover:bg-green-600">Completed</Badge>
-                        )}
-                        {activity.type === "PROJECT_APPLICATION" && (
-                          <Badge className="mr-2 bg-yellow-500 hover:bg-yellow-600">Pending</Badge>
-                        )}
-                        {activity.type === "MENTORSHIP_SESSION" && (
-                          <Badge className="mr-2 bg-blue-500 hover:bg-blue-600">Session</Badge>
-                        )}
-                        {activity.type === "COURSE_PROGRESS" && (
-                          <Badge className="mr-2 bg-purple-500 hover:bg-purple-600">Course</Badge>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {activity.date}
-                        </p>
+                      <div className="flex items-center pt-2 justify-between">
+                        <div className="flex items-center gap-2">
+                          {activity.type === "PROJECT_SUBMISSION" && (
+                            <Badge className="bg-green-500 hover:bg-green-600">Completed</Badge>
+                          )}
+                          {activity.type === "PROJECT_APPLICATION" && (
+                            <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>
+                          )}
+                          {activity.type === "MENTORSHIP_SESSION" && (
+                            <Badge className="bg-blue-500 hover:bg-blue-600">Session</Badge>
+                          )}
+                          {activity.type === "COURSE_PROGRESS" && (
+                            <Badge className="bg-purple-500 hover:bg-purple-600">Course</Badge>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {activity.date}
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="sm" className="ml-auto">View</Button>
                       </div>
                     </div>
                   </div>
@@ -624,13 +627,13 @@ export default function DashboardPage() {
 
         {/* Recommended Projects - Student-only section */}
         {user?.role === 'STUDENT' && (
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader>
               <CardTitle>Recommended Projects</CardTitle>
               <CardDescription>Based on your skills and interests</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {recommendedProjects.length > 0
                   ? recommendedProjects.map(project => renderProject(project))
                   : mockProjects.map(project => renderProject(project))
